@@ -1,0 +1,27 @@
+\begin{abstract}
+  This thesis aims to understand different trade-offs between current distributed transaction protocols. Specifically, we focus on two widely used concurrency control levels: Causal Consistency and Snapshot Isolation. 
+
+  First, we aim to understand the different trade-offs between theoretical impossibility results under Causal Consistency: SNOW, NOCS, and NOC-NOC. NOC-NOC is a state-of-the-art concurrency control impossibility result. There are algorithms guided by NOC-NOC. The fundamental rationale behind these algorithms is to move the burdens from the network communication side to the local computation side. We thus conjecture that there are corner cases when local computation itself becomes the new system bottleneck, and thus algorithms guided by NOC-NOC will become sub-optimal. We experiment with a wide range of experiment settings, and the results show that the above conjecture does not hold. The possible explanation is that under current hardware settings, the network communication is much slower than the local computation, and moving the system burden to the local computation is generally a wise choice.
+
+
+Second, we focus on improving the efficiency of distributed concurrency control of Snapshot Isolation practically. The key idea behind our protocol is that as the current hardware improves, transactions will practically satisfy the snapshot isolation guarantee in most cases. Many existing protocols incur too much overhead checking whether transactions satisfy the snapshot isolation conditions. Our experiments show that our new distributed snapshot isolation protocols outperform the state-of-the-art.
+  
+\end{abstract}
+
+\newpage
+
+\section*{Acknowledgement}
+I am incredibly grateful for having the opportunity to do my master's thesis in the Information Security Group. First and foremost, I would like to express my deepest thanks to Prof. Dr. David Basin. I am also profoundly grateful to my advisor, Dr. Si Liu, for the time we spent discussing the project's progress. I thank him for so many valuable suggestions and advice he gave to me. My master's thesis was partly built on Luca Multazzu's previous master's thesis. I thank him for his detailed help. Although he already left ETH and started to work, he always found a way to accommodate my request.
+Without their help, this master's thesis would not be available, and I always owe them a big thank. 
+
+
+Life at ETH is not always easy. Fortunately, I have many friends with whom I can get through this. I thank Tianqi Chen for always comforting me when I am struggling with difficulties and for spending hours discussing ways to overcome them. I thank Chenhao Li and Yidan Gao for the many jokes they have brought to me, and they have made my life much happier than it would have been. I thank Tao Sun for discussing so many exciting machine learning  problems with me. 
+
+Finally, I would like to express my deepest gratitude to my family. I am always indebted to your unconditional love and support for every decision I made. I thank my parents for supporting me the life at ETH, and for always encouraging me to do what I want to do, for persuading me that I can do anything, for giving me the best quality of life they can. I also thank my wife, Yucheng He, for always listening and talking to me during my most difficult times and for always giving me unconditional love and support.
+
+
+% \newpage
+{\centering
+\textit{To my wife Yucheng He and to my parents Yumin Li and Jian Sun}}.
+% \
+
