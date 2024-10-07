@@ -5,143 +5,39 @@
 \label{chap:introduction}
 \section{Problems and Motivations}
 
-Concurrency control is one of the most important properties in distributed systems and is widely studied. 
-There are numerous efforts that are trying to make concurrency control algorithms running efficiently \cite{bernstein1981concurrency, du2013clock, liu2024noc, lu2016snow, thomasian1998concurrency, barghouti1991concurrency, harding2017evaluation, agrawal1987concurrency,lora,ua}. There are different concurrency control levels. The most strict level of concurrency control is strict serializability. Generally speaking, the more rigorous a concurrency level is, the slower the overall performance. Still, it will be much easier for the programmer to understand and reason the system behavior. Increasing the performance of the core concurrency control algorithms will be one of the most crucial factors in improving overall distributed systems performance, such as distributed databases \cite{harding2017evaluation, agrawal1987concurrency}.  
+% Complexity of databases.
+Modern database management systems, which often rely on a relational model, were introduced in the 1970s \cite{codd1970relational}. Since then, the amount of data that needs to be stored and processed and the usecases of DBMSs has grown exponentially, which lead to the development of an entire industry of database software.
+The growing discrepancy between storage capacity and processing power, and the cost efficiency of buying multiple smaller machines \cite{barroso2022datacenter} pushed towards the development of concurency mechanisms and of distributed databases, able to distribute load across multiple machines and users. Distributed databases are essential for virtually all modern large-scale applications, such as social networks, e-commerce, cloud computing or reseach.
+
+% Fuzzing.
+Like all software, DBMSs are prone to bugs, especially considering the diminishing returns of optimizing their performance, which is in many cases the bottleneck of the entire system. While unit and integration tests are essential in the development of any software \cite{testimblogtests}, they are not enough to ensure the correctness of such complex systems. This is why, many current testing strategies rely on the use of fuzzing, a technique that generates random inputs to the system under test, in order to find bugs \cite{liang2018fuzzing}.
+
+% Motivation.
+The motivation and goal of this project is to replicate existant DBMS transactional bugs reported to their respective issue trackers, and reported by or analysed in other works \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, cui2024understanding_ICSE2024}, in order to undestand how they corelate with isolation levels. Then, using the gained insights and using a novel fuzzing technique introduced by Jiang, Z.\ et al. \cite{jiang2023detecting} based on SQL instrumentation, we try to find new bugs. We aim to generate the set of Adya dependencies \cite{adya1999weak} of randomly generated concurent transactions, and to use this information to detect bugs in the concurrency and isolation mechanisms of a distributed database.
 
 
-There are two flavors of research in the concurrency control community. The first one focuses more on the theoretical side. More specifically, many research efforts have been devoted to discovering impossibility results between different properties \cite{liu2024noc, lu2016snow}.  The other flavor of the concurrency control community focuses more on the practical side and tries to improve the actual performance of different concurrency control algorithms.
 
 
-In this project, we mainly focus on three concurrency control levels: strict serializability, snapshot isolation, and causal consistency. Strict serializability is the most strict concurrency control level and performs worst. However, it is easy for programmers to program strictly serializable distributed systems because it is essentially the same as a single-threaded program.  Snapshot isolation is a balance between strict levels and performance. It can avoid most abnormal behaviors but can still achieve pretty decent performance. Lastly, causal consistency is mainly used in web applications where performance is critical.
-
-
-\paragraph{Problems and Motivations}
-We mainly focus on the snapshot isolation concurrency control level because it is one of the most widely used concurrency control levels in practice. We aim to understand impossibility results and improve the practical performance of snapshot isolation concurrency control algorithms. The motivation of the paper is to try to bridge the gap between theoretical impossibility results and practical snapshot isolation concurrency control algorithms.
+% \begin{minted}[bgcolor=bg]{c++}
+% #include <iostream>
+% $ /home/tmoroianu/pinpoint/build/pinpoint -c -e MCP1 -i 10 -
+% 83360
+% 82950
+% 82950
+% 82860
+% 82860
+% 82530
+% ... 
+% \end{minted}
 
 
 \section{Contributions}
 Overall, we make the following contributions in this project.
 
 \begin{enumerate}
-    \item We compare several impossibility results. More specifically, we compare \textbf{NOC-NOC} with other impossibility results to see whether \textbf{NOC-NOC} is always optimal.
-    \item We run experiments to validate that there is no bottleneck shift in \textbf{NOC-NOC}.
-    \item We propose a practical snapshot isolation concurrency control algorithm based on \cite{lu2023ncc}.
-    \item We implement the algorithm and three other baselines.
-    \item We compare our practical snapshot isolation algorithm with three other baselines. Experiment results show that our algorithms outperform three other baselines under low contention scenarios.
+    \item We develop a new testing framework, levraging containerisation techniques for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
+    \item Using the testing framework, we replicate TODO bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
+    \item We analyse the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
+    \item We develop a novel black-box fuzzing technique, based on SQL instrumentation and Adya dependency graphs.
+    \item TODO: We implement the fuzzing technique, by modifying an existing fuzzing framework \cite{jiang2023detecting}. 
 \end{enumerate}
-% This is version \verb-v1.4- of the template.
-
-% We assume that you found this template on our institute's website, so
-% we do not repeat everything stated there.  Consult the website again
-% for pointers to further reading about \LaTeX{}.  This chapter only
-% gives a brief overview of the files you are looking at.
-
-% \section{Features}
-% \label{sec:features}
-
-% The rest of this document shows off a few features of the template
-% files.  Look at the source code to see which macros we used!
-
-% The template is divided into \TeX{} files as follows:
-% \begin{enumerate}
-% \item \texttt{thesis.tex} is the main file.
-% \item \texttt{extrapackages.tex} holds extra package includes.
-% \item \texttt{layoutsetup.tex} defines the style used in this document.
-% \item \texttt{theoremsetup.tex} declares the theorem-like environments.
-% \item \texttt{macrosetup.tex} defines extra macros that you may find
-%   useful.
-% \item \texttt{introduction.tex} contains this text.
-% \item \texttt{sections.tex} is a quick demo of each sectioning level
-%   available.
-% \item \texttt{refs.bib} is an example bibliography file.  You can use
-%   Bib\TeX{} to quote references.  For example, read the book from
-%   Bringhurst~\cite{bringhurst1996ets} if you can get a hold of it.
-  
-%   If you need to refer to multiple authors without wanting to name them,
-%   you can refer to an article by Einstein et al.~\cite{einstein1935can}.
-  
-%   Note that the tilde sign $\sim$ between the name and citation is
-%   necessary to prevent any unwanted breakage.
-% \end{enumerate}
-
-
-% \subsection{Extra package includes}
-
-% The file \texttt{extrapackages.tex} lists some packages that usually
-% come in handy.  Simply have a look at the source code.  We have
-% added the following comments based on our experiences:
-% \begin{description}
-% \item[REC] This package is recommended.
-% \item[OPT] This package is optional.  It usually solves a specific
-%   problem in a clever way.
-% \item[ADV] This package is for the advanced user, but solves a problem
-%   frequent enough that we mention it. Consult the package's
-%   documentation.
-% \end{description}
-
-% As a small example, here is a reference to the Section \emph{Features}
-% typeset with the recommended \package{cleveref} package:
-% \begin{quote}
-%   See \cref{sec:features}.
-% \end{quote}
-
-
-% \subsection{Layout setup}
-
-% This defines the overall look of the document -- for example, it
-% changes the chapter and section heading appearance.  We consider this
-% a `do not touch' area.  Take a look at the excellent \emph{Memoir}
-% documentation before changing it.
-
-% In fact, take a look at the excellent \emph{Memoir} documentation,
-% full stop.
-
-
-% \subsection{Theorem setup}
-
-% This file defines a bunch of theorem-like environments.
-
-% \begin{theorem}
-%   An example theorem.
-% \end{theorem}
-
-% \begin{proof}
-%   Proof text goes here.
-% \end{proof}
-
-% Note that the q.e.d.\ symbol moves to the correct place automatically
-% if you end the proof with an \texttt{enumerate} or
-% \texttt{displaymath}.  You do not need to use \verb-\qedhere- as with
-% \package{amsthm}.
-
-% \begin{theorem}[Some Famous Guy]
-%   Another example theorem.
-% \end{theorem}
-
-% \begin{proof}
-%   This proof
-%   \begin{enumerate}
-%   \item ends in an enumerate.
-%   \end{enumerate}
-% \end{proof}
-
-% \begin{proposition}
-%   Note that all theorem-like environments are by default numbered on
-%   the same counter.
-% \end{proposition}
-
-% \begin{proof}
-%   This proof ends in a display like so:
-%   \begin{displaymath}
-%     f(x) = x^2.
-%   \end{displaymath}
-% \end{proof}
-
-
-% \subsection{Macro setup}
-
-% For now the macro setup only shows how to define some basic macros,
-% and how to use a neat feature of the \package{mathtools} package:
-% \begin{displaymath}
-%   \abs{a}, \quad \abs*{\frac{a}{b}}, \quad \abs[\big]{\frac{a}{b}}.
-% \end{displaymath}

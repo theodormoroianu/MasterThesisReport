@@ -1,14 +1,25 @@
 \chapter{Background}
 
-TODO:
-Talk about:
- * DBMS.
- * Isolation levels.
- * Fuzzing.
+% TODO:
+% Talk about:
+%  * DBMS.
+%  * Isolation levels.
+%  * Fuzzing.
  
+\section{Database Management Systems}
 
+Modern database management systems (DBMS) are complex software systems that provide a high-level interface for users to interact with the underlying data. DBMSs such as \textit{MySQL} \cite{mysqlwebpage} offer a large set of features, including data storage, retrieval and manipulation.
+
+Relational DBMSs exposing an \textit{SQL} API form an overwhelming majority of the database systems in use today, with the 4 most popular DBMSs being relational \cite{akhtar2023popularity}. The relational model was introduced by Edgar Codd in 1970 \cite{codd1970relational}, and offers application developpers a high-level manipulation capacity of the stored data. Information is modeled as collections of relations between properties, commonly represented as tables. 
+
+Modern \textit{SQL} offers a Data Definition Language (DDL) to create and modify the structure of the database, and a Data Manipulation Language (DML) to interact with the data. The DML is composed of statements such as \textit{SELECT}, \textit{INSERT}, \textit{UPDATE}, and \textit{DELETE}.
+
+
+% BELLOW NOT WRITTEN BY ME, OLD PROJECT
 \section{Consistency Models}
-Consistency models are a fundamental concept in distributed systems. We will briefly describe some definitions here. Most of the definitions can be found in \cite{Consiste95:online}. First, we define distributed systems as a collection of processes and a system of states. Note that the process and the state here are purely logical and can be abstracted from the actual computer concepts.
+
+
+Consistency models are a fundamental concept i n distributed systems. We will briefly describe some definitions here. Most of the definitions can be found in \cite{Consiste95:online}. First, we define distributed systems as a collection of processes and a system of states. Note that the process and the state here are purely logical and can be abstracted from the actual computer concepts.
 
 A process is single-threaded and could only do one thing at a time. Processes communicate via the network, and the communication is asynchronous. The system state is a set of key-value pairs. The operation is a step taken at some process. It can be reading an item, writing to an item, or sending a message. A history is a collection of the operation and the system state. The concurrency control level defines which set of history is legal.
 \subsection{Strict Serializability}
