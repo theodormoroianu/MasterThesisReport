@@ -1,6 +1,12 @@
 \begin{abstract}
 
-This thesis aims to uncover potential correlations between transactional
+This thesis aims to create a testbed for easily replicating and analysing Database Management System (DBMS) transactional or isolation bugs, use this testbed to replicate and analyse a set of known bugs, and use the gained insights for developing a novel bug-finding tool.
+
+First, we create a testbed leveraging containerisation technology to easily spin-up and run a variety of custom versions of DBMSs. The testbed provides an easy way of running concurent transaction workloads, and generates logs of the transactions being executed. It also provides an easy way of starting multiple MySQL shells connected to arbitrary versions of the MySQL, MariaDB and TiDB DBMSs.
+
+We then use the testbed to replicate and analyse a set of known bugs in the MySQL, MariaDB and TiDB DBMSs. We find that in the overwhelming majority of the replicated bugs, the isolation level does not have any impact, as bugs manifest under all isolation levels supported by the DBMS.
+
+Finally, we develop a novel bug-finding technique, which leverages dependencies graphs between transactions computed using SQL-level instrumentation for finding isolation bugs in DBMSs. We also implement this technique on top of the TxCheck fuzzer.
 
 %   This thesis aims to understand different trade-offs between current distributed transaction protocols. Specifically, we focus on two widely used concurrency control levels: Causal Consistency and Snapshot Isolation. 
 
@@ -13,19 +19,26 @@ This thesis aims to uncover potential correlations between transactional
 
 \newpage
 
+% \vspace{4em}
+
 \section*{Acknowledgement}
-TODO: Change.
-I am incredibly grateful for having the opportunity to do my master's thesis in the Information Security Group. First and foremost, I would like to express my deepest thanks to Prof. Dr. David Basin. I am also profoundly grateful to my advisor, Dr. Si Liu, for the time we spent discussing the project's progress. I thank him for so many valuable suggestions and advice he gave to me. My master's thesis was partly built on Luca Multazzu's previous master's thesis. I thank him for his detailed help. Although he already left ETH and started to work, he always found a way to accommodate my request.
-Without their help, this master's thesis would not be available, and I always owe them a big thank. 
+I am very grateful for the opportunity of working on my Master's thesis as part of the Information Security group. I would like to extend my deepest gratitude to Prof. Dr. David Basin for the opportunity to work as part of his group, and to Dr. Si Liu for the help, flexibility, guidance and support he offered me throughout the project.  
+
+I am also grateful to my friends Constantin and Alex, my girlfriend Emma and my family for their camaraderie and support throughout the project.
+
+Lastly, I would like to acknowledge the financial support provided by the ETH Foundation, as part of my ESOP scholarship, which made my studies at ETH possible.
 
 
-Life at ETH is not always easy. Fortunately, I have many friends with whom I can get through this. I thank Tianqi Chen for always comforting me when I am struggling with difficulties and for spending hours discussing ways to overcome them. I thank Chenhao Li and Yidan Gao for the many jokes they have brought to me, and they have made my life much happier than it would have been. I thank Tao Sun for discussing so many exciting machine learning  problems with me. 
+% Not written by me below
+% to do my master's thesis in the Information Security Group. First and foremost, I would like to express my deepest thanks to Prof. Dr. David Basin. I am also profoundly grateful to my advisor, Dr. Si Liu, for the time we spent discussing the project's progress. I thank him for so many valuable suggestions and advice he gave to me. My master's thesis was partly built on Luca Multazzu's previous master's thesis. I thank him for his detailed help. Although he already left ETH and started to work, he always found a way to accommodate my request.
+% Without their help, this master's thesis would not be available, and I always owe them a big thank. 
 
-Finally, I would like to express my deepest gratitude to my family. I am always indebted to your unconditional love and support for every decision I made. I thank my parents for supporting me the life at ETH, and for always encouraging me to do what I want to do, for persuading me that I can do anything, for giving me the best quality of life they can. I also thank my wife, Yucheng He, for always listening and talking to me during my most difficult times and for always giving me unconditional love and support.
+
+% Life at ETH is not always easy. Fortunately, I have many friends with whom I can get through this. I thank Tianqi Chen for always comforting me when I am struggling with difficulties and for spending hours discussing ways to overcome them. I thank Chenhao Li and Yidan Gao for the many jokes they have brought to me, and they have made my life much happier than it would have been. I thank Tao Sun for discussing so many exciting machine learning  problems with me. 
+
+% Finally, I would like to express my deepest gratitude to my family. I am always indebted to your unconditional love and support for every decision I made. I thank my parents for supporting me the life at ETH, and for always encouraging me to do what I want to do, for persuading me that I can do anything, for giving me the best quality of life they can. I also thank my wife, Yucheng He, for always listening and talking to me during my most difficult times and for always giving me unconditional love and support.
 
 
-% \newpage
-{\centering
-\textit{To my wife Yucheng He and to my parents Yumin Li and Jian Sun}}.
-% \
+% {\centering
+% \textit{To my wife Yucheng He and to my parents Yumin Li and Jian Sun}}.
 
