@@ -28,6 +28,46 @@ The framework is modular, helping any future developer to easily extend it (for 
     \item The \textit{test runner}: This component orchestrates the execution of all required testcases under all specified configurations. 
 \end{itemize}
 
+\section{Custom DBMS Version}
+
+Some bugs are specific to a certain version of a DBMS, which might not be available as pre-built binaries. For instance, versions with serious vulnerabilities are usually removed from official repositories, or intermediary versions tied to a specifig \textit{Git} commit are not released as binaries.
+
+For the mentioned reasons, we consider the ability to built DBMSs from source essential. To simplify the process, we provide sample \textit{Dockerfile} templates, which can be used to test specific DMBS versions. A sample \textit{Dockerfile} for \textit{TiKV} can be seen in Figure \ref{fig:dockerfilesample}.
+ 
+\begin{figure}
+\begin{minted}[bgcolor=bg]{Dockerfile}
+FROM golang:1.19-alpine AS builder
+
+# Install git and other dependencies
+RUN apk add --no-cache git make bash gcc wget binutils-gold \
+    musl-dev curl tar
+
+# Set the working directory inside the container and
+# create necessary directories
+RUN mkdir -p /go/src/github.com/pingcap
+WORKDIR /go/src/github.com/pingcap
+
+ARG TIDB_COMMIT=c9288d246c99073ff04304363dc7234d9caa5090
+
+# Clone the TiDB repository
+RUN git clone --depth 1 https://github.com/pingcap/tidb.git \
+    && cd tidb \
+    && git fetch --depth 1 origin "$TIDB_COMMIT" \
+    && git checkout "$TIDB_COMMIT" \
+    && make -j \
+    && mv bin/tidb-server /usr/local/bin/tidb-server \
+    && cd .. \
+    && rm -rf tidb
+
+EXPOSE 4000
+WORKDIR /usr/local/bin
+CMD ["./tidb-server", "-P", "4000"]    
+\end{minted}
+\caption{Sample \textit{Dockerfile} for building a specific version of \textit{TiDB}}
+\label{fig:dockerfilesample}
+\end{figure}
+
+In our project, we provide \textit{Dockerfiles} for \textit{MySQL}, \textit{MariaDB} in release or debug mode, and \textit{TiDB} with or without \textit{TiKV}. Creating a new docker file only requires the \textit{Git} commit, and then running the \textit{build} command integrated into \textit{ReplBug}. 
 
 \section{Usage}
 
@@ -74,6 +114,12 @@ The testing framework, called \textit{ReplBug} is invoked from the CLI. The main
 \end{itemize}
 
 The tool can be either used from the CLI by passing arguments, or in interactive mode, where the tool exposes a shell that can be used by the user  (see Figure \ref{fig:repl_interactive}).
+
+\chapter{Replicating Transactional Bugs in MySQL, MariaDB and TiDB}
+
+\section{Overview}
+
+With the help of the \textit{ReplBug} testing framework, we were able to replicate \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} transactional, logical and isolation bugs.
 
 % % WHAT IS BELOW NOT WRITEN BY ME
 % Guided by \textbf{NOC-NOC}, \cite{multazzu2023nocs} designed two algorithms for two concurrency control levels: Read Atomicy and Transactional Causal Consistency. Interested readers can refer to \cite{multazzu2023nocs} for more details. Essentially, the client maintains version vectors to view the database states.  It also holds two views of the database states: the global safe vector version and the local safe vector version. By maintaining these metadata, the client could check the incoming transactions version and its local versions to maintain safety properties within one round of communication, thus satisfying the \textbf{O} property: \textit{One Round of Communication}. However, this is not without its penalty. It has to recursively scan all the dual states in the database to find the most recent version before being committed.  In contrast, the Eiger \cite{lloyd2013stronger} and the Eiger-Port \cite{lu2020performance} algorithms may incur additional network round trips, but require less local computation overhead. 
