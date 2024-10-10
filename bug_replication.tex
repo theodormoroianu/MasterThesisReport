@@ -8,8 +8,25 @@ This chapter presents the design, implementation and usage of a testing framewor
 
 The testing framework, is implemented in \textit{Python}, and heavily relies on \textit{Podman}, a container manager \cite{podmanwebpage} for managing DBMS instances. The tool works on \code{x64 GNU/Linux} systems, and we developped it in \textit{VSCode}, with the help of \textit{Github Copilot} \cite{copilotwebpage}.
 
-TODO: Add more details  here.
 
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=\linewidth]{assets/replbug_design.png}
+    \caption{Design of the \textit{ReplBug} testing framework}
+    \label{fig:replb_design}
+\end{figure}
+
+
+The framework is modular, helping any future developer to easily extend it (for instance for adding support for new DBMSs). The main components in the bug testing pipeline (see Figure \ref{fig:replb_design}) are the following:
+
+\begin{itemize}
+    \item The \textit{podman connector}: This component handles the interaction with the \textit{Podman} engine, and is responsible for starting, stopping, downloading and managing containers running DBMS instances.
+    \item The \textit{test parser}: This component handles the parsing of testcases, using a specific format, and is responsible for creating the internal representation of the testcases.
+    \item The \textit{mysql connector}: This component handles the connection to a DBMS instance (running within a container), and is responsible for executing statements in order and extracting the results.
+    \item The \textit{transaction runner}: This component handles the execution of all the statements in a transaction, and runs on different threads for concurrency.
+    \item The \textit{scenario runner}: This component runs testcases under a specific configuration.
+    \item The \textit{test runner}: This component orchestrates the execution of all required testcases under all specified configurations. 
+\end{itemize}
 
 
 \section{Usage}
