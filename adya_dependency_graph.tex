@@ -1,0 +1,72 @@
+\chapter{Detecting Isolation Bugs in DBMSs via Dependency Graphs Construction}
+
+\section{Introduction}
+
+In this chapter, we introduce a novel bug-finding technique, which leverages Direct Serialization Graphs (DSG) introduced by Adya, A. \cite{adya1999weak} and SQL-level instrumentation introduced by Jiang, Z. \cite{jiang2023detecting}.
+
+\section{Data Model Used}
+
+We consider Adya's data model, which is slightly different from the standard data model used in the SQL databases. In Adya's model, a transaction $T_i$ is a sequence of operations read and write operations, with or without a predicate. Each transaction installs new versions of objects, and reads or writes versions of objects installed by other transactions. We also consider the history model introduced by Adya, A. \cite{adya1999weak}.
+
+In his work, Adya, A. \cite{adya1999weak} introduces the concept of Direct Serializability Graphs (DSG), in which nodes are transactions and edges are directed dependencies or anti-dependencies between transactions.
+
+In our work, we build the DSGs using SQL-level instrumentation, and we use the DSGs to detect isolation bugs in DBMSs, by searching for cycles in the DSG, wich Adya, A. proved to be impossible in a corect DBMS \cite{adya1999weak}.
+
+\section{DSG Dependencies}
+
+We take the following definitions from Adya, A. \cite{adya1999weak}:
+
+\begin{definition}
+    \textbf{Overwriting a Predicate}: $T_j$ overwrites an operation $r_i(P: Vset(P))$ or $w_i(P: Vset(P))$ if:
+    \begin{itemize}
+        \item $T_j$ installs a version $x_j$ for some object $x$.
+        \item The version $x_k$ of $x$ present in $Vset(P)$ is an earlier version than $x_j$.
+        \item $x_j$ matches the predicate $P$ and $x_k$ does not, or vice versa.
+    \end{itemize}  
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Item-Read-Depends}: $T_j$ \textit{directly item-read-depends} on $T_i$ if $T_j$ reads an some object version instaleld by $T_i$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Predicate-Read-Depends}: $T_j$ \textit{directly predicate-read-depends} on $T_i$ if $T_j$ performs a read operation $r_j(P: Vset(P))$ and $T_i$ installs $x_i$ such that $x_i \in Vset(P)$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Read-Depends}: $T_i$ \textit{directly read-depends} on $T_j$ if $T_i$ directly item-read-depends or directly predicate-read-depends on $T_j$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Item-Anti-Depends}: $T_j$ \textit{directly item-anty-depends} on $T_i$ if $T_i$ reads some object version $x_k$ and $T_j$ installs a later version $x_j$. writes an object version that overwrites an object version installed by $T_i$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Predicate-Anti-Depends}: $T_j$ \textit{directly predicate-anti-depends} on $T_i$ if $T_j$ overwrites the predicate of an operation $r_i(P: Vset(P))$. %  or $w_i(P: Vset(P))$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Anti-Depends}: $T_i$ \textit{directly anti-depends} on $T_j$ if $T_i$ directly item-anti-depends or directly predicate-anti-depends on $T_j$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Item-Write-Depends}: $T_j$ \textit{directly item-write-depends} on $T_i$ if $T_i$ installs a version $x_i$ and $T_j$ installs the next version $x_j$.
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Predicate-Write-Depends}: $T_j$ \textit{directly predicate-write-depends} on $T_i$ if:
+    \begin{itemize}
+        \item $T_j$ overwrites an operation $w_i(P: Vset(P))$, or
+        \item $T_j$ executes an operation $w_j(P: Vset(P))$ and $T_i$ installs some version $x_i \in Vset(P)$.
+    \end{itemize}
+\end{definition}
+
+\begin{definition}
+    \textbf{Directly Write-Depends}: $T_i$ \textit{directly write-depends} on $T_j$ if $T_i$ directly item-write-depends or directly predicate-write-depends on $T_j$.
+\end{definition}
+
+Our end goal is to find all \textit{Direct Read Dependencies}, \textit{Direct Write Dependencies} and \textit{Direct Anti-Dependencies} between transactions, and to build the DSGs using these dependencies.
+
+\section{SQL-level Instrumentation}
+
+
