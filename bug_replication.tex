@@ -49,7 +49,7 @@ WORKDIR /go/src/github.com/pingcap
 
 ARG TIDB_COMMIT=c9288d246c99073ff04304363dc7234d9caa5090
 
-# Clone the TiDB repository
+# Clone and build the TiDB repository
 RUN git clone --depth 1 https://github.com/pingcap/tidb.git \
     && cd tidb \
     && git fetch --depth 1 origin "$TIDB_COMMIT" \

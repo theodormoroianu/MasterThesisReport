@@ -4,9 +4,9 @@ This thesis aims to create a testbed for easily replicating and analysing Databa
 
 First, we create a testbed leveraging containerisation technology to easily spin-up and run a variety of custom versions of DBMSs. The testbed provides an easy way of running concurent transaction workloads, and generates logs of the transactions being executed. It also provides an easy way of starting multiple MySQL shells connected to arbitrary versions of the MySQL, MariaDB and TiDB DBMSs.
 
-We then use the testbed to replicate and analyse a set of known bugs in the MySQL, MariaDB and TiDB DBMSs. We find that in the overwhelming majority of the replicated bugs, the isolation level does not have any impact, as bugs manifest under all isolation levels supported by the DBMS.
+We then use the testbed to replicate and analyse a set of known bugs in the MySQL, MariaDB and TiDB DBMSs. We find that in a majority of the replicated bugs the isolation level does not have any impact, as bugs manifest under all isolation levels supported by the DBMS. We then analyse in depth the bugs manifesting under only a subset of the isolation levels.
 
-Finally, we develop a novel bug-finding technique, which leverages dependencies graphs between transactions computed using SQL-level instrumentation for finding isolation bugs in DBMSs. We also implement this technique on top of the TxCheck fuzzer.
+Finally, we develop a novel bug-finding technique, which leverages dependencies graphs between transactions, computed using SQL-level instrumentation, for finding isolation bugs in DBMSs. We also implement this technique on top of the TxCheck fuzzer.
 
 %   This thesis aims to understand different trade-offs between current distributed transaction protocols. Specifically, we focus on two widely used concurrency control levels: Causal Consistency and Snapshot Isolation. 
 

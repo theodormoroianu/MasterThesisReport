@@ -10,11 +10,12 @@ We consider Adya's data model, which is slightly different from the standard dat
 
 In his work, Adya, A. \cite{adya1999weak} introduces the concept of Direct Serializability Graphs (DSG), in which nodes are transactions and edges are directed dependencies or anti-dependencies between transactions.
 
-In our work, we build the DSGs using SQL-level instrumentation, and we use the DSGs to detect isolation bugs in DBMSs, by searching for cycles in the DSG, wich Adya, A. proved to be impossible in a corect DBMS \cite{adya1999weak}.
+In this project, we build the DSGs using SQL-level instrumentation, and we use them to detect isolation bugs in DBMSs by searching for cycles, which Adya proved to be impossible in a corect DBMS \cite{adya1999weak}.
 
 \section{DSG Dependencies}
 
-We take the following definitions from Adya, A. \cite{adya1999weak}:
+We take the following definitions and notations from Adya, A. \cite{adya1999weak}:
+
 
 \begin{definition}
     \textbf{Overwriting a Predicate}: $T_j$ overwrites an operation $r_i(P: Vset(P))$ or $w_i(P: Vset(P))$ if:
@@ -38,7 +39,7 @@ We take the following definitions from Adya, A. \cite{adya1999weak}:
 \end{definition}
 
 \begin{definition}
-    \textbf{Directly Item-Anti-Depends}: $T_j$ \textit{directly item-anty-depends} on $T_i$ if $T_i$ reads some object version $x_k$ and $T_j$ installs a later version $x_j$. writes an object version that overwrites an object version installed by $T_i$.
+    \textbf{Directly Item-Anti-Depends}: $T_j$ \textit{directly item-anty-depends} on $T_i$ if $T_i$ reads some object version $x_k$ and $T_j$ installs a later version $x_j$.
 \end{definition}
 
 \begin{definition}
@@ -65,8 +66,78 @@ We take the following definitions from Adya, A. \cite{adya1999weak}:
     \textbf{Directly Write-Depends}: $T_i$ \textit{directly write-depends} on $T_j$ if $T_i$ directly item-write-depends or directly predicate-write-depends on $T_j$.
 \end{definition}
 
-Our end goal is to find all \textit{Direct Read Dependencies}, \textit{Direct Write Dependencies} and \textit{Direct Anti-Dependencies} between transactions, and to build the DSGs using these dependencies.
+Our end goal is to find all \textit{Direct Read Dependencies}, \textit{Direct Write Dependencies} and \textit{Direct Anti-Dependencies} between transactions, to build the DSGs using these dependencies and check for cycles, which can only occur due to an isolation bug in the DBMS. 
 
 \section{SQL-level Instrumentation}
 
+\subsection{Intuition Behind SQL-level Instrumentation}
 
+For finding the DSG edges (dependencies between transactions), we use SQL-level instrumentation, introduced by Jiang, Z. \cite{jiang2023detecting}. We instrument the SQL queries by adding SQL instrumentation code right before and right after each SQL query, and ensuring the instrumentation code is not interupted by locking or other operations, and ensure that every table of the database stores a \textit{version} column, which stores the version of the object.
+
+The informal intuition behind SQL-level instrumentation is that we wish to query the current state of the database, but lack the white-box access to the internal state of the DBMS (which is how Clark, J. et al. \cite{clark2024validating} extract the DSGs). As we can only query the database, we infer the dependencies by injecting \textit{SELECT} statements in testcases, in order to be able to construct a sound and complete DSG.
+
+\subsection{Intrumentation Statements}
+
+We intrument the SQL queries by adding the following statements, with slight variations from Jiang, Z. \cite{jiang2023detecting}:
+\begin{itemize}
+    \item \textbf{Before Write Read}: Before a write operation, we add a \textit{SELECT} statement to read the current version of overwritten objects.
+    \item \textbf{After Write Read}: After a write operation, we add a \textit{SELECT} statement to read the new version of the overwritten objects.
+    \item \textbf{Version Set Read}: Before reads and predicates, we add a \textit{SELECT} statement to read the version set of all objects in the used tables.
+    \item \textbf{Before Predicate Match}: Before a write operation, we add a \textit{SELECT} statement for each predicate that appears in the generated statement, to read the objects and their versions that match the predicate.
+    \item \textbf{After Predicate Match}: Similar to \textit{Before Predicate Match}, but after the write operation.
+    \item \textbf{Predicate Match}: Before an operation that contains a predicate, we add a \textit{SELECT} statement to read the objects and their versions that match the predicate.
+\end{itemize}
+
+\subsection{Extracting Dependencies from Instrumented Queries}
+
+Our tool is based on \textit{TxCheck} \cite{jiang2023detecting}, which we modify to suit our needs. Our dependency extraction process is thus similar to the one used in \textit{TxCheck}, with slight modification. Given a testcase consisting of intertwined transactions, we do the following:
+
+\begin{itemize}
+    \item Add instrumentation statements to the SQL queries.
+    \item Ensure that the instrumentation code is not interrupted by locking or other operations.
+    \item Run the testcase, saving the results of the \textit{SELECT} statements.
+    \item Extract the DSG edges with the help of the instrumentation results. 
+\end{itemize}
+
+To extract the DSG edges from the instrumented queries, we use rules similar to the ones used by Jiang, Z. \cite{jiang2023detecting}, with slight modifications. We first extract dependencies on a statement level, and then combine them to extract dependencies on a transaction level (the DSG).
+
+\subsubsection{Direct Read Dependencies}
+
+We extract the \textit{Direct Item-Read} dependencies by checking if the \textit{After Write Read} of the write statement and the output of the read statement intersect.
+
+\begin{proof}
+    Let $T_i$ be a transaction that writes an object $x_i$ and $T_j$ be a transaction that reads $x_i$. The \textit{After Write Read} of $T_i$ contains $x_i$, and the output of the read statement of $T_j$ contains $x_i$. Thus, the two intersect. Similarely, if $T_i$ writes does not write a version of $x$ that $T_j$ reads, the two do not intersect.
+\end{proof}
+
+\
+
+We extract the \textit{Direct Predicate-Read} dependencies by checking if the \textit{After Predicate Match} of the write statement and \textit{Version Set Read} of the read statement intersect.
+
+\begin{proof}
+    Let $T_i$ be a transaction that writes an object $x_i$ and $T_j$ be a transaction containing a predicate including $x_i$ in its version set.The \textit{After Predicate Match} of $T_i$ contains $x_i$, and the \textit{Version Set Read} of $T_j$ contains $x_i$. Thus, the two intersect. Similarely, if $T_i$ writes does not write a version of $x$ included in $T_j$'s version set, the two do not intersect.
+\end{proof}
+
+\subsubsection{Direct Anti-Dependencies}
+
+We extract the \textit{Direct Item-Anti-Depends} by:
+\begin{itemize}
+    \item Extracting a list of the versions of each object, ordered by the time of installation.
+    \item Checking if the version of the object read by the read statement is earlier than the version of the object read by the \textit{After Write Read} of a write statement.
+\end{itemize}
+
+We extract the \textit{Direct Predicate-Anti-Depends} by:
+\begin{itemize}
+    \item Extracting a list of the versions of each object, ordered by the time of installation.
+    \item Checking if the version of the object set by the write statement is later than the version of the object in the version set of a predicated read statement.
+    \item Checking if the object's match status changes between the two versions, by using the \textit{Before Predicate Match} and \textit{After Predicate Match} statements.
+\end{itemize}
+
+\subsubsection{Direct Write Dependencies}
+
+We extract the \textit{Direct Item-Write} dependencies by checking if the \textit{After Write Read} of the write statement and the \textit{Before Write Read} of the next write statement intersect.
+
+We extract the \textit{Direct Predicate-Write} dependencies by checking if:
+\begin{itemize}
+    \item The \textit{After Write Read} of a transaction intersects with the \textit{Version Set Read} of a predicated write statement of another transaction, and
+    \item Checking the same condition as for the \textit{Direct Predicate-Anti-Depends}, but with a write statement instead of a read.
+\end{itemize}
