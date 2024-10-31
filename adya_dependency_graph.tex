@@ -121,9 +121,12 @@ We extract the \textit{Direct Predicate-Read} dependencies by checking if the \t
 
 We extract the \textit{Direct Item-Anti-Depends} by:
 \begin{itemize}
-    \item Extracting a list of the versions of each object, ordered by the time of installation.
+    \item Extracting a list of the versions of each object, ordered by the installation order.
     \item Checking if the version of the object read by the read statement is earlier than the version of the object read by the \textit{After Write Read} of a write statement.
 \end{itemize}
+
+
+\
 
 We extract the \textit{Direct Predicate-Anti-Depends} by:
 \begin{itemize}
