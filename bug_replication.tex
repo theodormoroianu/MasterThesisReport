@@ -182,13 +182,177 @@ The tool can be either used from the CLI by passing arguments, or in interactive
 
 With the help of the \textit{ReplBug} testing framework, we were able to replicate \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} transactional, logical and isolation bugs. We focus on transaction and isolation bugs, reported by DBMS testing papers \cite{cui2024understanding_ICSE2024, dou2023detecting_ICSE2023, cui2022differentially_ASE2022}. We then replicate the bugs on the same versions of the DBMSs, and verify which isolation levels are affected. The number of bugs taken from each paper can be seen in Figure \ref{fig:bugs_by_paper}.
 
+\section{Replicated Bugs}
+
+
+We try to replicate \textit{MySQL} and \textit{MariaDB} bugs on the $4$ isolation levels supported by the DBMSs (\textit{Read Uncommitted}, \textit{Read Committed}, \textit{Repeatable Read} and \textit{Serializable}). For \textit{TiDB}, we replicate the bugs on the $2$ isolation levels supported by the DBMS (\textit{Read Committed} and \textit{Serializable}).
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\linewidth]{assets/bug_replication_bugs_by_dbms_and_paper.png}
+    \includegraphics[width=0.8\linewidth]{assets/bug_replication_bugs_by_dbms_and_paper.png}
     \caption{Distribution of bugs by DBMS and reporting paper  \cite{cui2024understanding_ICSE2024, dou2023detecting_ICSE2023, cui2022differentially_ASE2022}.}
     \label{fig:bugs_by_paper}
 \end{figure}
 
-We try to replicate \textit{MySQL} and \textit{MariaDB} bugs on the $4$ isolation levels supported by the DBMSs (\textit{Read Uncommitted}, \textit{Read Committed}, \textit{Repeatable Read} and \textit{Serializable}). For \textit{TiDB}, we replicate the bugs on the $2$ isolation levels supported by the DBMS (\textit{Read Committed} and \textit{Serializable}).
+The methodology for replicating a bug is the following:
+\begin{itemize}
+    \item We search for the list of bugs reported by a paper, and filter the bugs that are transactional or isolation bugs (as reported by the paper), and manifest on one of the DBMSs we support (\textit{MySQL}, \textit{MariaDB} and \textit{TiDB}).
+    \item We read the bug report in the DBMS's bug tracker, extract the version of the DBMS on which the bug was reported and a PoC.
+    \item If the DBMS version is not available as a pre-built binary, we build the DBMS from source using the \textit{Dockerfile} templates provided by the \textit{ReplBug} tool.
+    \item We write a testcase in the \textit{ReplBug} testing framework, using the meta-language described in the previous chapter.
+    \item We run the testcase on the DBMS, under all supported isolation levels.
+    \item We sometimes have to adjust the testcase, as some reports do not include the exact version of the DBMS, or the PoC is precise enough. 
+\end{itemize}
 
+Within this project, we successfully replicated $115$ bugs, out of which $33$ manifest on the \textit{MariaDB} DBMS, $17$ manifest on \textit{MySQL} and $65$ manifest on \textit{TiDB}. The distribution of the bugs by DBMS and reporting paper can be seen in Figure \ref{fig:interesting_bugs_by_paper}.
+
+\section{Analysis}
+
+We run the \textit{ReplBug} testing framework on the selected bugs, and we generate reports of their execution. We then read the reports, and analyse the output of the testcases. We then explore the corelation between the bugs and the isolation levels.
+
+We find that $100$ bugs manifest on all isolation levels supported by the DBMS, and $15$ bugs only manifest on a subset of the isolation levels. In the reminder of this chapter, we refer to the bugs that manifest only on a subset of the isolation levels as \textit{interesting bugs}. In Figure \ref{fig:interesting_bugs_by_paper}, we present the distribution of the \textit{interesting bugs} by DBMS and reporting paper.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{assets/bug_replication_interesting_bugs_by_dbms_and_paper.png}
+    \caption{Relevant bugs by DBMS and reporting paper  \cite{cui2024understanding_ICSE2024, dou2023detecting_ICSE2023, cui2022differentially_ASE2022}.}
+    \label{fig:interesting_bugs_by_paper}
+\end{figure}
+
+
+We then explore the isolation levels under which the \textit{interesting bugs}, manifest. We find that:
+\begin{itemize}
+\item 5 bugs manifest under \textit{Read Committed} and \textit{Repeatable Read}.
+\item 4 bugs manifest under \textit{Repeatable Read}.
+\item 2 bugs manifest under \textit{Read Uncommitted} and \textit{Read Committed}.
+\item 2 bugs manifest under \textit{Read Committed}.
+\item One bug manifests under \textit{Serializable}.
+\item One bug manifests under \textit{Repeatable Read} and \textit{Serializable}.
+\end{itemize}
+
+The findings are illustrated in Figure \ref{fig:interesting_bugs_by_isolation_lvl}. The main limitation of this analysis is that the number of \textit{intersting bugs} is small, making the results not statistically significant. Additionally, our approach only allows us to verify if a bug is triggered by a specific PoC, and not to explore the root cause of the bug, which could in theory be triggered by other PoCs under different isolation levels.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{assets/bug_replication_interesting_bugs_by_isolation_lvl.png}
+    \caption{Relevant bugs by isolation levels.}
+    \label{fig:interesting_bugs_by_isolation_lvl}
+\end{figure}
+
+\section{Interesting Bugs}
+
+We present a brief overview of the \textit{interesting bugs}, and provide a plausible explanation for their behaviour, where possible. The bugs are presented in the order of the number of isolation levels under which they manifest.
+
+\subsection*{Bug MDEV-19535}
+
+This bug is replicated on \textit{MariaDB 10.4.5}, and manifests under \textit{Repeatable Read} and {Serializable}.
+
+For compatibility, \textit{MariaDB} provides an \code{sql\_mode} variable, which can be used to mimic the behaviour of other DBMSs.
+
+When the \code{sql\_mode} is set to \code{ORACLE}, \textit{MariaDB} ommits to add exclusive locks when running an \textit{SELECT FOR UPDATE} statement. This leads to incorrect hehaviour when running \textit{SELECT FOR UPDATE} statements under \textit{Repeatable Read} and \textit{Serializable} isolation levels, as reads are no longer guaranteed to be repeatable.
+
+\subsection*{Bug MDEV-26642}
+
+
+This bug is replicated on \textit{MariaDB 10.6.17}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}. The bug was fixed by a PR in version \textit{$10.6.18$}, and was marked as affecting \textit{MySQL} too.
+
+
+The bug affects concurent modifications of the same table: if a transaction updates a row of the table, and another transaction updates the entire table, the second transaction does not see its own modifications. The main part of the PoC can be seen in Figure \ref{fig:MDEV-26642}.
+
+
+\begin{figure}
+\begin{minted}[bgcolor=bg]{SQL}
+conn_0> begin;
+conn_0> select * from t;        -- [(0, 0), (1, 1), (2, 2)]
+
+conn_1> begin;
+conn_1> update t set a = 10 where b = 1;
+conn_1> commit;
+
+conn_0> select * from t;        -- [(0, 0), (1, 1), (2, 2)]
+conn_0> update t set a = 10 where true;
+conn_0> select * from t;        -- [(10, 0), (1, 1), (10, 2)]
+conn_0> commit;
+\end{minted}
+\caption{PoC for the bug \textit{MDEV-26642}.} \label{fig:MDEV-26642}
+\end{figure}
+
+The bug is caused by a design issue of \textit{InnoDB}, the storage engine used by both \textit{MariaDB} and \textit{MySQL}.
+
+The bug is due to the inability of \textit{InnoDB} to detect \textit{write-write} conflicts. Under \textit{Read Committed} and \textit{Repeatable Read}, \textit{InnoDB} creates a read view at the start of a statement / transaction, used for knowing which records should be visible, but does not handle overwriten records properly. 
+
+The \textit{Read Uncommitted} isolation level always displays the latest state of the table, and \textit{Serializable} will lock the accessed records first, so the bug does not manifest under these isolation levels.
+
+\subsection*{Bug MDEV-26643}
+
+
+This bug is replicated on \textit{MariaDB 10.5.12}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}. The bug was fixed by a PR.The PoC is very similar to \textit{MDEV-26642}, and can be seen in Figure \ref{fig:MDEV-26643}.
+
+
+\begin{figure}
+\begin{minted}[bgcolor=bg]{SQL}
+conn_0> insert into t values(null, 1), (2, 2),
+                    (null, null), (null, 3), (4, null);
+conn_0> begin;
+conn_0> update t set a = 10 where 1;
+conn_1> begin;
+conn_1> update t set b = 20 where a;
+conn_0> commit;
+conn_1> commit;
+conn_2> select * from t; 
+        -- [(10, 1), (10, 20), (10, 20), (10, 20), (10, 20)]
+\end{minted}
+\caption{PoC for the bug \textit{MDEV-26642}.} \label{fig:MDEV-26643}
+\end{figure}
+
+The bug is caused by an improperly used semi-consistent read, where \textit{Read Uncommitted} and \textit{Read Committed} transactions are sometimes not updated with the latest changes.
+
+\subsection*{Bug MDEV-29243}
+
+This bug is replicated on \textit{MariaDB 10.8.3}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}, by causing a crash of the DBMS server.
+
+The root cause of the bug is an incorrect and redundant check of the data retrival status in \textit{InnoDB}, which leads to potential assertion failures. The bug was fixed by erasing the redundant check.
+
+\subsection*{Bug MDEV-29565}
+
+This bug is replicated on \textit{MariaDB 10.8.3}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}.
+
+While confirmed as intented behaviour, this is caused by an undocumented feature of \textit{InnoDB}, which allows changes made by other transactions to be visible in the current one if changes are made to the same records \cite{mysqlconsistentread}. The PoC is simplified in Figure \ref{fig:MDEV-29565}.
+
+\begin{figure}
+\begin{minted}[bgcolor=bg]{SQL}
+conn_1> START TRANSACTION;
+conn_1> update t set a = 162;
+conn_0> START TRANSACTION;
+conn_1> COMMIT;
+conn_0> select * from t where <CONDITION>; -- returns 1 record
+conn_0> update t set a = 63 where <CONDITION>;
+conn_0> select * from t where a = 63;      -- returns 2 records
+conn_0> COMMIT;
+\end{minted}
+\caption{Simplification of the PoC for the bug \textit{MDEV-29565}.} \label{fig:MDEV-29565}
+\end{figure}
+
+
+\subsection*{Bug MYSQL-100293}
+
+This bug is replicated on \textit{MySQL 5.7.31}, and manifests under \textit{Serializable}.
+
+When the \code{innobase\_query\_caching\_of\_table\_permitted} flag is set to \code{true} (by passing \code{--query-cache-type=1} as an argument to the server), \textit{Serialisable} transactions are not blocked when using the cache, which causes some missing locks.
+
+The bug was fixed by properly handling \code{--query-cache-type=1} when the transaction isolation level is \textit{Serializable}.
+
+\subsection*{Bug MYSQL-104245}
+
+
+
+\subsection*{Bug MYSQL-108528}
+\subsection*{Bug MYSQL-114389}
+\subsection*{Bug MYSQL-93806}
+\subsection*{Bug MYSQL-94338}
+\subsection*{Bug TIDB-21151}
+\subsection*{Bug TIDB-21498}
+\subsection*{Bug TIDB-25176}
+\subsection*{Bug TIDB-33315}
+
+% Maybe talk about when the bugs were fixed.
