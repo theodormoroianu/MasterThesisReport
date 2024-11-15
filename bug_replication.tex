@@ -260,7 +260,7 @@ This bug is replicated on \textit{MariaDB 10.6.17}, and manifests under \textit{
 The bug affects concurent modifications of the same table: if a transaction updates a row of the table, and another transaction updates the entire table, the second transaction does not see its own modifications. The main part of the PoC can be seen in Figure \ref{fig:MDEV-26642}.
 
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> begin;
 conn_0> select * from t;        -- [(0, 0), (1, 1), (2, 2)]
@@ -289,7 +289,7 @@ The \textit{Read Uncommitted} isolation level always displays the latest state o
 This bug is replicated on \textit{MariaDB 10.5.12}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}. The bug was fixed by a PR.The PoC is very similar to \textit{MDEV-26642}, and can be seen in Figure \ref{fig:MDEV-26643}.
 
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> insert into t values(null, 1), (2, 2),
                     (null, null), (null, 3), (4, null);
@@ -319,7 +319,7 @@ This bug is replicated on \textit{MariaDB 10.8.3}, and manifests under \textit{R
 
 While confirmed as intented behaviour, this is caused by an poorly documented feature of \textit{InnoDB}, which allows changes made by other transactions to be visible in the current one if changes are made to the same records \cite{mysqlconsistentread}. The PoC is simplified in Figure \ref{fig:MDEV-29565}.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_1> START TRANSACTION;
 conn_1> update t set a = 162;
@@ -362,7 +362,7 @@ The bug is marked as verified, but we strongly consider the PoC actually works a
 In the PoC, one transaction updates a table and commits. Another concurent transaction does not see the changes made by the first transaction, however those changes become visible when the second transaction tried to update a table. This behaviour is similar to the behaviour of \textit{MDEV-29565}, and we consider it is due to the same poorly-documented feature \cite{mysqlconsistentread}.
 
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
     conn_1> START TRANSACTION;
     conn_0> START TRANSACTION;
@@ -393,7 +393,7 @@ This bug is replicated on \textit{MySQL 8.0.12}, and manifests under \textit{Rep
 
 As the bug is still open, we do not know the root cause of the bug, whose PoC can be seen in Figure \ref{fig:MYSQL-114389}.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> BEGIN;
 
@@ -422,7 +422,7 @@ This bug is replicated on \textit{MySQL 8.0.12}, and manifests under \textit{Rea
 
 The bug is caused by a misshandling of the \code{INSERT ... ON DUPLICATE KEY} statement. When a record with a conflicting primary key is inserted, the key should be changed and a row lock created. However, under \textit{Read Committed} and \textit{Repeatable Read}, a range lock is created instead. The PoC is simplified in Figure \ref{fig:MYSQL-93806}.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> create table t(id int primary key, a int)engine=innodb;
 conn_0> insert into t values(1,1),(5,5);
@@ -447,7 +447,7 @@ This bug is replicated on \textit{MySQL 5.7.25}, and manifests under \textit{Rea
 
 The bug manifests by causing diry-reads when inserting multiple rows on one transaction, and performing a complex query on another transaction. The PoC is simplified in Figure \ref{fig:MYSQL-94338}. We do not know the root cause of the bug, as no bug fix was made available.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 
         conn_0> BEGIN;
@@ -474,7 +474,7 @@ The bug occurs because the \code{USE\_INDEX\_MERGE} feature does not refresh the
 
 The bug fix correctly updates the timestamp used by transactions when running under \textit{READ COMMITTED}, by invoking the \code{refreshForUpdateTSForRC} function when required.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> BEGIN;
 
@@ -498,7 +498,7 @@ This bug is replicated on \textit{TiDB}, on the custom commit \code{3a32bd2d} us
 
 The bug occurs because of missing consistency checks which allow one concurent transaction to perform DDL (Data Definition Language) operations on a table (like inserting / deleting columns or deleting indexes), while another transaction is reading from the same table. The PoC is simplified in Figure \ref{fig:TIDB-21498}.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> begin;
 
@@ -519,7 +519,7 @@ The bug is due to the usage of the \code{tidb\_snapshot} system variable, which 
 
 Under \textit{Repetable Read}, setting this timestamp and the performing a \code{SELECT} statement breaks the isolation level guarantees. The PoC is simplified in Figure \ref{fig:TIDB-25176}.
 
-\begin{figure}[H]
+\begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
 conn_0> begin;                              -- Start txn.
     
@@ -535,3 +535,32 @@ conn_0> select a from test.ttt where id=1;            -- [(2)].
 \end{figure}
 
 \subsection*{Bug TIDB-33315}
+
+This bug is replicated on \textit{TiDB 5.4.0} when using the \textit{TiKV} key-value store, and manifests under \textit{Repeatable Read}. 
+
+The bug is caused by the mismatch of rows created by concurent transactions: if a transaction performs a statement matching an entire table while another transaction holds an exclusive lock on the table, the first transaction will see an inconsistent state. The PoC is simplified in Figure \ref{fig:TIDB-33315}.
+
+\begin{figure}
+\begin{minted}[bgcolor=bg]{SQL}
+conn_0> BEGIN PESSIMISTIC;
+conn_0> UPDATE t SET c1=2, c2=2;
+
+conn_1> BEGIN PESSIMISTIC;
+conn_1> DELETE FROM t;     -- Delete all records.
+
+conn_0> COMMIT;            -- First transaction commits.
+
+conn_1> SELECT * FROM t;   -- Returns one row.
+conn_1> COMMIT;
+\end{minted}
+\caption{Simplification of the PoC for the bug \textit{TIDB-33315}.} \label{fig:TIDB-33315}
+\end{figure}
+
+
+\section{Conclusion}
+
+In this chapter, we present an analysis of a few isolation bugs we consider \textit{interesting}, as they manifest under a subset of the isolation levels supported by the DBMSs. We provide a brief overview of the bugs, and a plausible explanation for their behaviour.
+
+We find that the bugs are caused by a variety of reasons, from design issues of the storage engine to poorly documented features of the DBMSs. We also find that some bugs are quickly fixed, while others are left unfixed until they \textit{fix themselves}, i.e. they are no longer present in the latest versions of the DBMSs.
+
+The main cause of bugs is the improper handling of locking and MVCC (Multi-Version Concurrency Control) mechanisms, which are the core of the transactional guarantees provided by the DBMSs, as \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} define their isolation levels based on locking behaviour and transaction visibility \cite{mysqlisolationlevels,mariadbtransactions,tidbisolationlevels}.
