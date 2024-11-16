@@ -1,8 +1,29 @@
 \chapter{Detecting Isolation Bugs in DBMSs via Dependency Graphs Construction}
 
-\section{Introduction}
+\section{Introduction and Motivation}
 
-In this chapter, we introduce a novel bug-finding technique, which leverages Direct Serialization Graphs (DSG) introduced by Adya, A. \cite{adya1999weak} and SQL-level instrumentation introduced by Jiang, Z. \cite{jiang2023detecting}.
+As discussed in the previous chapter, and in various other works \cite{jiang2023detecting,cui2024understanding_ICSE2024,dou2023detecting_ICSE2023,clark2024validating,cui2022differentially_ASE2022}, isolation bugs are a prevalent problem in DBMSs, due to the inherent tradeoff between performance (under the form of concurrency) and isolation.
+
+Modern database systems usually express isolation guarantees under a \textit{locking behaviour}, which is a set of rules dictating how tables and rows are locked during transactions. However, due to the sheer complexity of modern DBMSs, ensuring a correct locking behaviour is challenging, due to a combination of factors such as:
+
+\begin{itemize}
+    \item DBMS systems are complex, with multiple components interacting with each other, such as the query planner, the storage engine, the transaction manager, etc. A bug in any of these components can lead to an isolation bug.
+    \item The performance of DBMSs is subject to the law of diminishing returns, requiering more and more complex optimizations to achieve smaller and smaller performance gains. This makes it more likely for bugs to be introduced.
+    \item Higher concurrency leads to better performance, thus making a reduction in the number of locks desirable. However, this also makes it more likely for isolation bugs to occur.
+\end{itemize}
+
+As \textit{isolation bugs} are not neccessarily \textit{logic bugs}, i.e. not bugs in the traditional sense but rather a violation of the isolation guarantees, hunting them with standard bug-finding techniques is challenging:
+
+\begin{itemize}
+    \item Testing high concurrency workloads, required for capturing edge cases where isolation bugs occur, is hard to achieve due to an exponential growth in the number of possible states.
+    \item DBMSs are not fully compatible with each others, and concurrent workloads are inherintly non-deterministic, making it hard to check for bugs by exploring differences between DBMSs.
+    \item Semi-automatic techniques such as \textit{Fuzzing} require an \textit{oracle} to determine if the output is correct, which is hard to achieve in the case of isolation bugs.
+\end{itemize}
+
+Current techniques avoid these problems by using a white-box testing approach \cite{clark2024validating}, using the database system itself as a testing oracle \cite{jiang2023detecting}, or running workloads on multiple DBMSs to check for disparities \cite{cui2022differentially_ASE2022}.
+
+In this chapter, we introduce a novel bug-finding technique, which leverages Direct Serialization Graphs (DSG) introduced by Adya, A. \cite{adya1999weak} and SQL-level instrumentation introduced by Jiang, Z. \cite{jiang2023detecting}. This technique is a modification of the one used by Jiang, Z.. We also implement a tool based on our technique on top of \textit{TxCheck}, which we modify to suit our needs.
+
 
 \section{Data Model Used}
 
