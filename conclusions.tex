@@ -1,43 +1,43 @@
 \chapter{Conclusion}
-\section{Related Work}
-Many prior works exist on concurrency control, both on a single machine and in distributed settings.  We discuss the most related works here. We first describe some commonly used practical concurrency control algorithms. Then, we will also discuss the more theoretical side of concurrency control, namely, impossibility results.  There are also some works that propose different design criteria \cite{antoniadis2020impossibility, didona2019distributed, konwar2021snow, tomsic2018distributed, lu2020performance, lu2016snow}.
-\paragraph{Snapshot Isolation Protocols}
-We will first describe some prior works on distributed snapshot isolation protocols and algorithms.
+% \section{Related Work}
+% Many prior works exist on concurrency control, both on a single machine and in distributed settings.  We discuss the most related works here. We first describe some commonly used practical concurrency control algorithms. Then, we will also discuss the more theoretical side of concurrency control, namely, impossibility results.  There are also some works that propose different design criteria \cite{antoniadis2020impossibility, didona2019distributed, konwar2021snow, tomsic2018distributed, lu2020performance, lu2016snow}.
+% \paragraph{Snapshot Isolation Protocols}
+% We will first describe some prior works on distributed snapshot isolation protocols and algorithms.
 
-Clock-Si \cite{du2013clock} is a fully distributed snapshot isolation concurrency control protocol. It derives the snapshot and commit timestamp from a loosely synchronized clock rather than a centralized clock to alleviate the central bottleneck. Percolator \cite{peng2010large} is a snapshot isolation protocol used by Google. Google mainly uses it to build and maintain large-scale web search index. 
-
-
-Walter \cite{sovran2011transactional} is a key-value store that supports transaction and replication of data across different sites. It uses two new and simple techniques: preferred sites and counting sets. Yesquel \cite{aguilera2015yesquel} is a scalable SQL storage that targets Web applications. It provides performance similar to NoSQL systems but offers SQL relational semantics.  It uses a novel distributed architecture and a novel distributed data structure called YDBT. 
+% Clock-Si \cite{du2013clock} is a fully distributed snapshot isolation concurrency control protocol. It derives the snapshot and commit timestamp from a loosely synchronized clock rather than a centralized clock to alleviate the central bottleneck. Percolator \cite{peng2010large} is a snapshot isolation protocol used by Google. Google mainly uses it to build and maintain large-scale web search index. 
 
 
-Loesing et al. \cite{loesing2015design} evaluated an alternative distributed database architecture at the snapshot isolation level. It introduces new techniques for novel sharing-data distributed transactions. \cite{globallydistributed} examines the problem of implementing distributed snapshot isolation and proposes a set of criteria for efficiently implementing distributed snapshot isolation. It also explores the design space of implementing distributed snapshot isolation. \cite{zhang2010supporting} discuss techniques used in HBase for implementing distributed snapshot isolation. It shows how to efficiently support multi-row distributed transactions at the snapshot isolation level in HBase. 
+% Walter \cite{sovran2011transactional} is a key-value store that supports transaction and replication of data across different sites. It uses two new and simple techniques: preferred sites and counting sets. Yesquel \cite{aguilera2015yesquel} is a scalable SQL storage that targets Web applications. It provides performance similar to NoSQL systems but offers SQL relational semantics.  It uses a novel distributed architecture and a novel distributed data structure called YDBT. 
 
 
-Finally, ReTSO \cite{junqueira2011lock} discusses a lock-free algorithm to support distributed snapshot isolation. ecStore \cite{vo2010towards} leverages cloud storage systems so that it can support elastic transactions. \cite{yabandeh2012critique} provides a new insight that read-write conflict should be prevented over the write-write conflict in a distributed snapshot isolation system.
-\paragraph{Causal Consistency Protocols}
-Many systems try to optimize causal consistency transaction algorithms. Some of the examples include Cure \cite{akkoorath2016cure}, Contrarian \cite{didona2018causal}, Unistore \cite{bravo2021unistore}, Orbe \cite{du2013orbe}, GentleRain \cite{du2014gentlerain}, Wren \cite{spirovska2018wren}, PaRiS \cite{spirovska2019paris}, OCC \cite{spirovska2020optimistic}. 
-\paragraph{Impossibility Results}
-In distributed systems, many impossibility results guide the design and implementation of distributed concurrency control algorithms. Here, we only state the most relevant and most important ones.
-
-The CAP theorem \cite{munoz2019cap} states that these three properties can not be simultaneously satisfied in a distributed system: (1) \textbf{C}onsistency, (2) \textbf{A}vailability, and (3) network \textbf{P}artition tolerance.  The FLP result \cite{fischer1985impossibility} proves that in a distributed system that is deterministic and asynchronous, processes can not reach a consensus if every one process could be faulty.
+% Loesing et al. \cite{loesing2015design} evaluated an alternative distributed database architecture at the snapshot isolation level. It introduces new techniques for novel sharing-data distributed transactions. \cite{globallydistributed} examines the problem of implementing distributed snapshot isolation and proposes a set of criteria for efficiently implementing distributed snapshot isolation. It also explores the design space of implementing distributed snapshot isolation. \cite{zhang2010supporting} discuss techniques used in HBase for implementing distributed snapshot isolation. It shows how to efficiently support multi-row distributed transactions at the snapshot isolation level in HBase. 
 
 
-The SNOW theorem \cite{lu2016snow} states that these four properties can not be simultaneously satisfied together: (1) 
-\textbf{S}trict Serializability, (2) \textbf{N}on-blocking execution, (3) \textbf{O}ne response per read, (4) \textbf{W}rite transactions that conflict. 
+% Finally, ReTSO \cite{junqueira2011lock} discusses a lock-free algorithm to support distributed snapshot isolation. ecStore \cite{vo2010towards} leverages cloud storage systems so that it can support elastic transactions. \cite{yabandeh2012critique} provides a new insight that read-write conflict should be prevented over the write-write conflict in a distributed snapshot isolation system.
+% \paragraph{Causal Consistency Protocols}
+% Many systems try to optimize causal consistency transaction algorithms. Some of the examples include Cure \cite{akkoorath2016cure}, Contrarian \cite{didona2018causal}, Unistore \cite{bravo2021unistore}, Orbe \cite{du2013orbe}, GentleRain \cite{du2014gentlerain}, Wren \cite{spirovska2018wren}, PaRiS \cite{spirovska2019paris}, OCC \cite{spirovska2020optimistic}. 
+% \paragraph{Impossibility Results}
+% In distributed systems, many impossibility results guide the design and implementation of distributed concurrency control algorithms. Here, we only state the most relevant and most important ones.
 
-The NOCS theorem \cite{lu2020performance} states that these three properties can not be achieved simultaneously: (1) \textbf{N}on-blocking, (2) \textbf{O}ne-round communication, (3) \textbf{C}onstant meta-data, (4)\textbf{S}trict Serializability. 
-
-The NOC-NOC theorem defines the following six properties: (1) \textbf{N}one-blocking Reads, (2) \textbf{O}ne Round-trip Reads, (3) \textbf{C}onstant-size Metadata for Reads, (4) \textbf{N}one-blocking Writes, (5) \textbf{O}ne-phase Writes, and (6) \textbf{C}onstant-size metadata for Writes. The NOC-NOC  theorem states that no transaction algorithms that support snapshot isolation can achieve all six properties at the same time. 
-
-
-\section{Conclusion}
-This paper focuses on understanding and implementing high-performance concurrency control transaction algorithms. We work on both the theoretical and practical sides.
-
-From the theoretical side, the theorem NOC-NOC \cite{liu2024noc} is a state-of-the-art theorem that says no transaction algorithms could satisfy six properties altogether. Algorithms guided by NOC-NOC principles move the system performance bottleneck from network communication to the computation side. We conjecture that under specific scenarios, NOC-NOC may lead to suboptimal performance, leading to new research opportunities for new impossibility results. However, after many experiments, we find that NOC-NOC-guided transaction algorithms outperform other state-of-the-art transaction algorithms. This means our conjecture does not hold. Moving system burdens from network communication to the computation side is still beneficial from the current hardware landscape.
+% The CAP theorem \cite{munoz2019cap} states that these three properties can not be simultaneously satisfied in a distributed system: (1) \textbf{C}onsistency, (2) \textbf{A}vailability, and (3) network \textbf{P}artition tolerance.  The FLP result \cite{fischer1985impossibility} proves that in a distributed system that is deterministic and asynchronous, processes can not reach a consensus if every one process could be faulty.
 
 
+% The SNOW theorem \cite{lu2016snow} states that these four properties can not be simultaneously satisfied together: (1) 
+% \textbf{S}trict Serializability, (2) \textbf{N}on-blocking execution, (3) \textbf{O}ne response per read, (4) \textbf{W}rite transactions that conflict. 
 
-We then move to the more practical side. Inspired by \cite{lu2023ncc}, we also propose a practical snapshot isolation transaction algorithm.  The key observation is that in practical scenarios where network errors rarely happen, the order to invoke the transactions is usually the same as the order to commit the transactions, especially under low contention scenarios. Based on these key observations, we implemented our transaction algorithms. We also implemented three other baselines, Clock-SI \cite{du2013clock}, Percolator \cite{peng2010large}, Walter \cite{sovran2011transactional} in the same codebase. Our experiments show that our algorithms outperform all three other algorithms.
+% The NOCS theorem \cite{lu2020performance} states that these three properties can not be achieved simultaneously: (1) \textbf{N}on-blocking, (2) \textbf{O}ne-round communication, (3) \textbf{C}onstant meta-data, (4)\textbf{S}trict Serializability. 
 
-Functional correctness, such as isolation guarantees, is as critical to database transactions as their performance. 
-In future work, we plan to verify the isolation guarantees of our algorithms using the state-of-the-art isolation checkers~\cite{plume,polysi}.
+% The NOC-NOC theorem defines the following six properties: (1) \textbf{N}one-blocking Reads, (2) \textbf{O}ne Round-trip Reads, (3) \textbf{C}onstant-size Metadata for Reads, (4) \textbf{N}one-blocking Writes, (5) \textbf{O}ne-phase Writes, and (6) \textbf{C}onstant-size metadata for Writes. The NOC-NOC  theorem states that no transaction algorithms that support snapshot isolation can achieve all six properties at the same time. 
+
+
+% \section{Conclusion}
+% This paper focuses on understanding and implementing high-performance concurrency control transaction algorithms. We work on both the theoretical and practical sides.
+
+% From the theoretical side, the theorem NOC-NOC \cite{liu2024noc} is a state-of-the-art theorem that says no transaction algorithms could satisfy six properties altogether. Algorithms guided by NOC-NOC principles move the system performance bottleneck from network communication to the computation side. We conjecture that under specific scenarios, NOC-NOC may lead to suboptimal performance, leading to new research opportunities for new impossibility results. However, after many experiments, we find that NOC-NOC-guided transaction algorithms outperform other state-of-the-art transaction algorithms. This means our conjecture does not hold. Moving system burdens from network communication to the computation side is still beneficial from the current hardware landscape.
+
+
+
+% We then move to the more practical side. Inspired by \cite{lu2023ncc}, we also propose a practical snapshot isolation transaction algorithm.  The key observation is that in practical scenarios where network errors rarely happen, the order to invoke the transactions is usually the same as the order to commit the transactions, especially under low contention scenarios. Based on these key observations, we implemented our transaction algorithms. We also implemented three other baselines, Clock-SI \cite{du2013clock}, Percolator \cite{peng2010large}, Walter \cite{sovran2011transactional} in the same codebase. Our experiments show that our algorithms outperform all three other algorithms.
+
+% Functional correctness, such as isolation guarantees, is as critical to database transactions as their performance. 
+% In future work, we plan to verify the isolation guarantees of our algorithms using the state-of-the-art isolation checkers~\cite{plume,polysi}.
