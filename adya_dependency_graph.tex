@@ -153,7 +153,7 @@ This instrumentation has the potential of instroducing unwanted locking behaviou
 
 
 
-\section{Extracting Dependencies from Instrumented Queries}
+\section{Extracting the DSG with SQL Instrumentation}
 
 \subsection{Methodology}
 
@@ -223,6 +223,28 @@ In a similar way, we can extract the \textit{direct predicate write dependencies
 
 \section{Implementation and Results}
 
+We implement our technique on top of \textit{TxCheck}, which we modify to suit our needs. As we are only looking for isolation bugs, we do not need to run the single-transaction \textit{TxCheck} uses as an oracle, so we bypass that part of the code.
+
+The main changes we make to \textit{TxCheck} are:
+\begin{itemize}
+    \item Update the project to bring it to a working state: \textit{TxCheck} relies on \textit{Docker} images of \textit{Ubuntu 20.04}, on which some dependencies of the project are not available. We fix the broken dependencies, and make the project runnable.
+    \item Add the new \textit{Before Predicate Match}, \textit{After Predicate Match} and \textit{Predicate Match} instrumentation types.
+    \item Modify the dependency extraction code to create a complete and sound extraction of the DSG dependencies.
+    \item Modify the bug minimization code to include support for the new instrumentation types.
+    \item Add additional tests based on Adya's theory \cite{adya1999weak} for detecting isolation bugs, which were not previously possible due to the sporadic dependencies created by the original technique.
+\end{itemize}
+
+TODO
 
 \section{Limitations and Future Work}
+
+While our technique is a step forward in the direction of a complete and sound extraction of the DSG dependencies, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
+\begin{itemize}
+    \item The fuzzing is quite slow, with the testcase generation and finding a non-blocking schedule being the bottleneck.
+    \item TODO 
+\end{itemize}
+
+
+
+\section{Conclusion}
 
