@@ -234,17 +234,21 @@ The main changes we make to \textit{TxCheck} are:
     \item Add additional tests based on Adya's theory \cite{adya1999weak} for detecting isolation bugs, which were not previously possible due to the sporadic dependencies created by the original technique.
 \end{itemize}
 
-TODO
+The fuzzing approach of our technique is similar to the one used by \textit{TxCheck}, with the main difference being the ability to extract the DSG dependencies accurately, thus making the \textit{graph decycling} phase of \textit{TxCheck}, used to remove circular dependencies assumed to be false positives, unnecessary. This means that, while our approach and \textit{TxCheck} share most of the implementation and work in a similar way, the two are quite different in the way they find bugs:
+\begin{itemize}
+    \item Our approach relies on properties of the DSG to find isolation bugs.
+    \item \textit{TxCheck} checks a few properties of the DSG, but mainly relies on the single-transaction oracle to find bugs, as the DSG extraction used is not sound.
+\end{itemize}
 
 \section{Limitations and Future Work}
 
-While our technique is a step forward in the direction of a complete and sound extraction of the DSG dependencies, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
+Our technique is a complete and sound method of extracting of the DSG dependencies, and a step forward in the direction of behaviour-based DBMS testing. However, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
 \begin{itemize}
     \item The fuzzing is quite slow, with the testcase generation and finding a non-blocking schedule being the bottleneck.
-    \item TODO 
+    \item While our technique is able to run under any of the isolation levels supported by the DBMS, the lower the isolation level the less checks we can perform, as the DSG has less restrictions. In particular, the \textit{Read Uncommitted} isolation level imposes almost no restrictions on the DSG, which makes it hard to find bugs.
 \end{itemize}
 
-
+We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables TODO
 
 \section{Conclusion}
 
