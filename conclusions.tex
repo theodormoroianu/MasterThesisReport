@@ -1,4 +1,13 @@
 \chapter{Conclusion}
+
+During this project, we focused on the lifecycle of DBMS bug finding. We worked on multiple self-contained yet naturally related parts, namely:
+
+\begin{itemize}
+    \item We developped a tool facilitating the replication of bugs in DBMSs, which can be used by bug reporters, developpers or reserachers for easily running testcases on multiple database systems and versions. The tool is available at \url{TODO}, and released under the MIT license.
+    \item We replicated $115$ bugs, showcasing the usability of our tool, selected the bugs we considered to be interesting, and analyzed them. 
+    \item We built on top of the Adya dependency graph theory and its extraction using \textit{SQL instrumentation}, and we proposed a complete and sound methodology for extracting the Adya dependency graph in a black-box manner, which is to the best of our knowledge the first of its kind. We also implemented this methodology on top of a fork of the \textit{TxCheck} fuzzer, which is available at \url{TODO}, and released under the same license as the original project (GPL v3). 
+\end{itemize}
+
 % \section{Related Work}
 % Many prior works exist on concurrency control, both on a single machine and in distributed settings.  We discuss the most related works here. We first describe some commonly used practical concurrency control algorithms. Then, we will also discuss the more theoretical side of concurrency control, namely, impossibility results.  There are also some works that propose different design criteria \cite{antoniadis2020impossibility, didona2019distributed, konwar2021snow, tomsic2018distributed, lu2020performance, lu2016snow}.
 % \paragraph{Snapshot Isolation Protocols}

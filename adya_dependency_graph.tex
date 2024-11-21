@@ -246,9 +246,18 @@ Our technique is a complete and sound method of extracting of the DSG dependenci
 \begin{itemize}
     \item The fuzzing is quite slow, with the testcase generation and finding a non-blocking schedule being the bottleneck.
     \item While our technique is able to run under any of the isolation levels supported by the DBMS, the lower the isolation level the less checks we can perform, as the DSG has less restrictions. In particular, the \textit{Read Uncommitted} isolation level imposes almost no restrictions on the DSG, which makes it hard to find bugs.
+    \item Similarely to the original \textit{TxCheck} technique, scheduling for some valid executions might fail due to the additional locking created by the instrumentation.
 \end{itemize}
 
-We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables TODO
+We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables, while the Adya model assumes that deleted rows enter a \textit{erased} state, in which they still exist belong in \textit{Version Sets}. This can be solved by:
+\begin{itemize}
+    \item Having a \textit{deleted} copy of each table, initially empty.
+    \item Before a \textit{DELETE} statement, inserting the deleted rows in the \textit{deleted} table.
+    \item When performing the \textit{Version Set Read} instrumentation, also read the entries from the \textit{deleted} table.
+\end{itemize}
 
 \section{Conclusion}
 
+In this project, we improve the DSG extraction technique used by \textit{TxCheck}, by adapting the SQL-level instrumentation technique introduced by Jiang, Z. \cite{jiang2023detecting} to obtain a complete and sound list dependency. We implement the changes in the \textit{TxCheck} project, giving \textit{TxCheck} the ability to extract the DSG edges accurately.
+
+While we did not have the time to run a full evaluation of our technique and to let the fuzzing run for a long time, we believe that our technique is a step forward in the direction of behaviour-based DBMS testing, and that it has the potential to find more isolation bugs than the original technique used by \textit{TxCheck}.
