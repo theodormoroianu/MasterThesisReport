@@ -2,21 +2,21 @@
 
 \section{Introduction and Motivation}
 
-As discussed in the previous chapter, and in various other works \cite{jiang2023detecting,cui2024understanding_ICSE2024,dou2023detecting_ICSE2023,clark2024validating,cui2022differentially_ASE2022}, isolation bugs are a prevalent problem in DBMSs, due to the inherent tradeoff between performance (under the form of concurrency) and isolation.
+As discussed in the previous chapter, and in various other works \cite{jiang2023detecting,cui2024understanding_ICSE2024,dou2023detecting_ICSE2023,clark2024validating,cui2022differentially_ASE2022}, isolation bugs are a prevalent problem in DBMSs, due to the inherent trade-off between performance (under the form of concurrency) and isolation.
 
-Modern database systems usually express isolation guarantees under a \textit{locking behaviour}, which is a set of rules dictating how tables and rows are locked during transactions. However, due to the sheer complexity of modern DBMSs, ensuring a correct locking behaviour is challenging, due to a combination of factors such as:
+Modern database systems usually express isolation guarantees under a \textit{locking behavior}, which is a set of rules dictating how tables and rows are locked during transactions. However, due to the sheer complexity of modern DBMSs, ensuring a correct locking behavior is challenging, due to a combination of factors such as:
 
 \begin{itemize}
     \item DBMS systems are complex, with multiple components interacting with each other, such as the query planner, the storage engine, the transaction manager, etc. A bug in any of these components can lead to an isolation bug.
-    \item The performance of DBMSs is subject to the law of diminishing returns, requiering more and more complex optimizations to achieve smaller and smaller performance gains. This makes it more likely for bugs to be introduced.
+    \item The performance of DBMSs is subject to the law of diminishing returns, requiring more and more complex optimizations to achieve smaller and smaller performance gains. This makes it more likely for bugs to be introduced.
     \item Higher concurrency leads to better performance, thus making a reduction in the number of locks desirable. However, this also makes it more likely for isolation bugs to occur.
 \end{itemize}
 
-As \textit{isolation bugs} are not neccessarily \textit{logic bugs}, i.e. not bugs in the traditional sense but rather a violation of the isolation guarantees, hunting them with standard bug-finding techniques is challenging:
+As \textit{isolation bugs} are not necessarily \textit{logic bugs}, i.e. not bugs in the traditional sense but rather a violation of the isolation guarantees, hunting them with standard bug-finding techniques is challenging:
 
 \begin{itemize}
     \item Testing high concurrency workloads, required for capturing edge cases where isolation bugs occur, is hard to achieve due to an exponential growth in the number of possible states.
-    \item DBMSs are not fully compatible with each others, and concurrent workloads are inherintly non-deterministic, making it hard to check for bugs by exploring differences between DBMSs.
+    \item DBMSs are not fully compatible with each others, and concurrent workloads are inherently non-deterministic, making it hard to check for bugs by exploring differences between DBMSs.
     \item Semi-automatic techniques such as \textit{Fuzzing} require an \textit{oracle} to determine if the output is correct, which is hard to achieve in the case of isolation bugs.
 \end{itemize}
 
@@ -27,11 +27,11 @@ In this chapter, we introduce a novel bug-finding technique, which leverages Dir
 
 \section{Database Model Used}
 
-For testing the correct behaviour of database systems, we need well-defined specifications we can test against. While some techniques rely on the DBMSs themselves for self-validating or cross validating results \cite{cui2022differentially_ASE2022}, other bug-finding techniques express DBMS isolation bugs as violated constraints in the Direct Serialization Graph (DSG) built following  Adya's data model \cite{jiang2023detecting,clark2024validating}, directed labeled graphs in which nodes are tranzactions and directed edges are dependencies.
+For testing the correct behavior of database systems, we need well-defined specifications we can test against. While some techniques rely on the DBMSs themselves for self-validating or cross validating results \cite{cui2022differentially_ASE2022}, other bug-finding techniques express DBMS isolation bugs as violated constraints in the Direct Serialization Graph (DSG) built following  Adya's data model \cite{jiang2023detecting,clark2024validating}, directed labeled graphs in which nodes are transactions and directed edges are dependencies.
 
 In particular, \textit{TxCheck}, which this project builds on, uses a mixture of both methods:
 \begin{itemize}
-    \item Using \textit{SQL instrumentation}, \textit{TxCheck} extracts a supergraph of the DSG. However, the dependency checking technique used is not perfect, and can create sporadic dependencies.
+    \item Using \textit{SQL instrumentation}, \textit{TxCheck} extracts a super-graph of the DSG. However, the dependency checking technique used is not perfect, and can create sporadic dependencies.
     \item Using the DSG, \textit{TxCheck} creates and executes an equivalent execution trace using a single transaction on the same DBMS, which is used as an oracle for comparing the results.
 \end{itemize}
 
@@ -103,7 +103,7 @@ Throughout this work, we heavily reuse the definitions and notations introduced 
 
 The steps for building the DSGs given an ordered sequence of statements (each belonging to a possibly different transaction) are as follows:
 \begin{enumerate}
-    \item Run the statements sequencialy, saving the versions of the objects at each step.
+    \item Run the statements sequentially, saving the versions of the objects at each step.
     \item Extract the \textit{Direct Read Dependencies}, \textit{Direct Write Dependencies} and \textit{Direct Anti-Dependencies} between transactions.
     \item Build the DSGs using the extracted dependencies.
 \end{enumerate}
@@ -116,22 +116,22 @@ The second step is the hardest, due to the inherent lack of information a DBMS p
 
 The most straight-forward way to extract DSG dependencies is to modify the source code of DBMSs, exposing the internal state of the system. This allows for a relatively simple extraction of dependencies, as the injected code has access to all of the instruction scheduling, existing locks, state of the key-value store, etc. This is how Clark, J. et al. extract the DSGs in their work \cite{clark2024validating}.
 
-A less intrusive approach, which considers the DBMS as a black box (thus being easily ported across different systems), is to use SQL-level instrumentation, a technique pioneered by Jiang, Z., which consists of sistematically exposing the internal state of the DBMS by injecting \textit{SELECT} statements in the SQL queries \cite{jiang2023detecting}.
+A less intrusive approach, which considers the DBMS as a black box (thus being easily ported across different systems), is to use SQL-level instrumentation, a technique pioneered by Jiang, Z., which consists of systematically exposing the internal state of the DBMS by injecting \textit{SELECT} statements in the SQL queries \cite{jiang2023detecting}.
 
 The informal intuition behind SQL-level instrumentation is that we want to know the current state of the database, but lack the white-box access to the DBMS internals. As we can only query the database, we infer the dependencies by injecting \textit{SELECT} statements in testcases. We instrument the SQL queries by adding instrumentation code right before and right after each original SQL statement.
 
 A few challenging parts are:
 
 \begin{itemize}
-    \item Ensuring the instrumentation code is not interupted by locking or other operations. This is addressed by re-ordering statements in the testcase, and erasing them if no viable scheduling order can be found.
+    \item Ensuring the instrumentation code is not interrupted by locking or other operations. This is addressed by re-ordering statements in the testcase, and erasing them if no viable scheduling order can be found.
     \item Ensuring that every table of the database stores a \textit{version} column, which stores the version of the object, required for understanding the view a statement has access to. This is addressed by adding a \textit{version} column to each table.
-    \item Concurrency issues, such as the non-deterministic locking and unlocking behaviour of transactions. This is addressed by spacing out the statements, and ensuring that no transaction locking takes place.
+    \item Concurrency issues, such as the non-deterministic locking and unlocking behavior of transactions. This is addressed by spacing out the statements, and ensuring that no transaction locking takes place.
 \end{itemize}
 
 
-\subsection{Intrumentation Statements}
+\subsection{Instrumentation Statements}
 
-We intrument SQL statements by encapsulating them with instrumentation placed before and after statements, which expose the tranzaction's view of the database. As we built on top of \textit{TxCehck}, the instrumentation we use is very similar to the original one, with the addition of $3$ new instrumentation types. The instrumentation types we use are:
+We instrument SQL statements by encapsulating them with instrumentation placed before and after statements, which expose the transaction's view of the database. As we built on top of \textit{TxCehck}, the instrumentation we use is very similar to the original one, with the addition of $3$ new instrumentation types. The instrumentation types we use are:
 
 \begin{itemize}
     \item \textbf{Before Write Read (BWR)}: Before a write operation, a \textit{SELECT} statement is added to read the version of overwritten objects.
@@ -142,7 +142,7 @@ We intrument SQL statements by encapsulating them with instrumentation placed be
     \item \textbf{Predicate Match (PM)}: Before an operation that contains a predicate, a \textit{SELECT} statement reading the objects and versions that match the predicate is added.
 \end{itemize}
 
-This instrumentation has the potential of instroducing unwanted locking behaviour (i.e. the \textit{SELECT} statements cause table locks), which is why we need to ensure that the instrumentation code is not interrupted by locking or other operations. In Figure \ref{fig:sql_instrumentation_sample}, we show the instrumentation of a trivial testcase.
+This instrumentation has the potential of introducing unwanted locking behavior (i.e. the \textit{SELECT} statements cause table locks), which is why we need to ensure that the instrumentation code is not interrupted by locking or other operations. In Figure \ref{fig:sql_instrumentation_sample}, we show the instrumentation of a trivial testcase.
 
 \begin{figure}[!h]
     \centering
@@ -191,7 +191,7 @@ We prove that our method for extracting overwrites is both sound and complete.
 
 \subsection{Extracting Predicate Write Dependencies}
 
-Being able to check if one statement overwrites another, we can trivially extract \textit{direct predicate anti-dependies} by checking if a write statement overwrites the predicate of a read statement.
+Being able to check if one statement overwrites another, we can trivially extract \textit{direct predicate anti-dependencies} by checking if a write statement overwrites the predicate of a read statement.
 
 \begin{proof}
     Let $A$ be a write statement and $B$ be a read statement. If $A$ overwrites $B$, then the transaction containing $A$ by definition \textit{directly predicate anti-depends} on the transaction containing $B$.
@@ -234,7 +234,7 @@ The main changes we make to \textit{TxCheck} are:
     \item Add additional tests based on Adya's theory \cite{adya1999weak} for detecting isolation bugs, which were not previously possible due to the sporadic dependencies created by the original technique.
 \end{itemize}
 
-The fuzzing approach of our technique is similar to the one used by \textit{TxCheck}, with the main difference being the ability to extract the DSG dependencies accurately, thus making the \textit{graph decycling} phase of \textit{TxCheck}, used to remove circular dependencies assumed to be false positives, unnecessary. This means that, while our approach and \textit{TxCheck} share most of the implementation and work in a similar way, the two are quite different in the way they find bugs:
+The fuzzing approach of our technique is similar to the one used by \textit{TxCheck}, with the main difference being the ability to extract the DSG dependencies accurately, thus making the \textit{graph de-cycling} phase of \textit{TxCheck}, used to remove circular dependencies assumed to be false positives, unnecessary. This means that, while our approach and \textit{TxCheck} share most of the implementation and work in a similar way, the two are quite different in the way they find bugs:
 \begin{itemize}
     \item Our approach relies on properties of the DSG to find isolation bugs.
     \item \textit{TxCheck} checks a few properties of the DSG, but mainly relies on the single-transaction oracle to find bugs, as the DSG extraction used is not sound.
@@ -242,11 +242,11 @@ The fuzzing approach of our technique is similar to the one used by \textit{TxCh
 
 \section{Limitations and Future Work}
 
-Our technique is a complete and sound method of extracting of the DSG dependencies, and a step forward in the direction of behaviour-based DBMS testing. However, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
+Our technique is a complete and sound method of extracting of the DSG dependencies, and a step forward in the direction of behavior-based DBMS testing. However, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
 \begin{itemize}
     \item The fuzzing is quite slow, with the testcase generation and finding a non-blocking schedule being the bottleneck.
     \item While our technique is able to run under any of the isolation levels supported by the DBMS, the lower the isolation level the less checks we can perform, as the DSG has less restrictions. In particular, the \textit{Read Uncommitted} isolation level imposes almost no restrictions on the DSG, which makes it hard to find bugs.
-    \item Similarely to the original \textit{TxCheck} technique, scheduling for some valid executions might fail due to the additional locking created by the instrumentation.
+    \item Similarly to the original \textit{TxCheck} technique, scheduling for some valid executions might fail due to the additional locking created by the instrumentation.
 \end{itemize}
 
 We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables, while the Adya model assumes that deleted rows enter a \textit{erased} state, in which they still exist belong in \textit{Version Sets}. This can be solved by:
@@ -260,4 +260,4 @@ We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT}
 
 In this project, we improve the DSG extraction technique used by \textit{TxCheck}, by adapting the SQL-level instrumentation technique introduced by Jiang, Z. \cite{jiang2023detecting} to obtain a complete and sound list dependency. We implement the changes in the \textit{TxCheck} project, giving \textit{TxCheck} the ability to extract the DSG edges accurately.
 
-While we did not have the time to run a full evaluation of our technique and to let the fuzzing run for a long time, we believe that our technique is a step forward in the direction of behaviour-based DBMS testing, and that it has the potential to find more isolation bugs than the original technique used by \textit{TxCheck}.
+While we did not have the time to run a full evaluation of our technique and to let the fuzzing run for a long time, we believe that our technique is a step forward in the direction of behavior-based DBMS testing, and that it has the potential to find more isolation bugs than the original technique used by \textit{TxCheck}.

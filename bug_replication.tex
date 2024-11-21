@@ -1,12 +1,12 @@
-\chapter{Developping a DBMS Transactional Testing Framework}
+\chapter{Developing a DBMS Transactional Testing Framework}
 
 \section{Overview}
 
-This chapter presents the design, implementation and usage of a testing framework for replicating DBMS transactional bugs. Using the testing framework, we replicate a set of transactional bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs. We then analyse the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
+This chapter presents the design, implementation and usage of a testing framework for replicating DBMS transactional bugs. Using the testing framework, we replicate a set of transactional bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs. We then analyze the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
 
 \section{Design}
 
-The testing framework, is implemented in \textit{Python}, and heavily relies on \textit{Podman}, a container manager \cite{podmanwebpage} for managing DBMS instances. The tool works on \code{x64 GNU/Linux} systems, and we developped it in \textit{VSCode}, with the help of \textit{Github Copilot} \cite{copilotwebpage}.
+The testing framework, is implemented in \textit{Python}, and heavily relies on \textit{Podman}, a container manager \cite{podmanwebpage} for managing DBMS instances. The tool works on \code{x64 GNU/Linux} systems, and we developed it in \textit{VSCode}, with the help of \textit{Github Copilot} \cite{copilotwebpage}.
 
 
 \begin{figure}[!h]
@@ -30,9 +30,9 @@ The framework is modular, helping any future developer to easily extend it (for 
 
 \section{Custom DBMS Version}
 
-Some bugs are specific to a certain version of a DBMS, which might not be available as pre-built binaries. For instance, versions with serious vulnerabilities are usually removed from official repositories, or intermediary versions tied to a specifig \textit{Git} commit are not released as binaries.
+Some bugs are specific to a certain version of a DBMS, which might not be available as pre-built binaries. For instance, versions with serious vulnerabilities are usually removed from official repositories, or intermediary versions tied to a specific \textit{Git} commit are not released as binaries.
 
-For the mentioned reasons, we consider the ability to built DBMSs from source essential. To simplify the process, we provide sample \textit{Dockerfile} templates, which can be used to test specific DMBS versions. A sample \textit{Dockerfile} for \textit{TiKV} can be seen in Figure \ref{fig:dockerfilesample}.
+We thus consider the ability to built DBMSs from source (given a version tag or a \textit{Git} commit) essential. To simplify the process, we provide sample \textit{Dockerfile} templates, which can be used to test specific DMBS versions. A sample \textit{Dockerfile} for \textit{TiDB} can be seen in Figure \ref{fig:dockerfilesample}.
  
 \begin{figure}
 \begin{minted}[bgcolor=bg]{Dockerfile}
@@ -73,12 +73,12 @@ In our project, we provide \textit{Dockerfiles} for \textit{MySQL}, \textit{Mari
 
 For a given testcase, specifying the statements and their execution order on the DBMS is hard, due to multiple reasons:
 \begin{itemize}
-    \item Transactional and isolation bug PoCs usually need multiple concurent transactions, making a simple \textit{SQL} script insufficient.
+    \item Transactional and isolation bug PoCs usually need multiple concurrent transactions, making a simple \textit{SQL} script insufficient.
     \item Some statements are expected to fail, which might lead to the termination of a standard script.
     \item The order of the statement execution (and sometimes the locking order) is important for the bug to manifest.
 \end{itemize} 
 
-To address these issues, the \textit{MySQL} development team created a testing framework which encodes testcases in a special format \cite{mysqltestrun}. Using this format, however, is cubersome, as we only need a small subset of the features, and using the \textit{MySQL} interpreter would make it hard to test other DBMSs. 
+To address these issues, the \textit{MySQL} development team created a testing framework which encodes testcases in a special format \cite{mysqltestrun}. Using this format, however, is cumbersome, as we only need a small subset of the features, and using the \textit{MySQL} interpreter would make it hard to test other DBMSs. 
 
 We thus create a small, custom scripting language on top of \textit{Python}, inspired by the way bug reporters describe their PoCs. In Figure \ref{fig:bug_metalanguage_sample}, we present a sample testcase for the bug \textit{MDEV-26642} in \textit{MariaDB 10.6.17}.
 
@@ -128,7 +128,7 @@ Each testcase provides the following information:
     \item The scenarios, which are the testcases that will be executed (one for each isolation level). Each scenario is a sequence of statements, executed in parallel by different connections.
 \end{itemize}
 
-For running a testcase, the tool provisions the required DBMS instance, executes the setup script (if present), and then runs the scenarios under all supported isolation levels. For each transaction a separate connection to the DBMS server is created. The results are then stored in a report, which can be further analysed.
+For running a testcase, the tool provisions the required DBMS instance, executes the setup script (if present), and then runs the scenarios under all supported isolation levels. For each transaction a separate connection to the DBMS server is created. The results are then stored in a report, which can be further analyzed.
 
 \section{Usage}
 
@@ -208,7 +208,7 @@ Within this project, we successfully replicated $115$ bugs, out of which $33$ ma
 
 \section{Analysis}
 
-We run the \textit{ReplBug} testing framework on the selected bugs, and we generate reports of their execution. We then read the reports, and analyse the output of the testcases. We then explore the corelation between the bugs and the isolation levels.
+We run the \textit{ReplBug} testing framework on the selected bugs, and we generate reports of their execution. We then read the reports, and analyze the output of the testcases. We then explore the corelation between the bugs and the isolation levels.
 
 We find that $100$ bugs manifest on all isolation levels supported by the DBMS, and $15$ bugs only manifest on a subset of the isolation levels. In the reminder of this chapter, we refer to the bugs that manifest only on a subset of the isolation levels as \textit{interesting bugs}. In Figure \ref{fig:interesting_bugs_by_paper}, we present the distribution of the \textit{interesting bugs} by DBMS and reporting paper.
 
@@ -230,7 +230,7 @@ We then explore the isolation levels under which the \textit{interesting bugs}, 
 \item One bug manifests under \textit{Repeatable Read} and \textit{Serializable}.
 \end{itemize}
 
-The findings are illustrated in Figure \ref{fig:interesting_bugs_by_isolation_lvl}. The main limitation of this analysis is that the number of \textit{intersting bugs} is small, making the results not statistically significant. Additionally, our approach only allows us to verify if a bug is triggered by a specific PoC, and not to explore the root cause of the bug, which could in theory be triggered by other PoCs under different isolation levels.
+The findings are illustrated in Figure \ref{fig:interesting_bugs_by_isolation_lvl}. The main limitation of this analysis is that the number of \textit{interesting bugs} is small, making the results not statistically significant. Additionally, our approach only allows us to verify if a bug is triggered by a specific PoC, and not to explore the root cause of the bug, which could in theory be triggered by other PoCs under different isolation levels.
 
 \begin{figure}
     \centering
@@ -241,15 +241,15 @@ The findings are illustrated in Figure \ref{fig:interesting_bugs_by_isolation_lv
 
 \section{Interesting Bugs}
 
-We present a brief overview of the \textit{interesting bugs}, and provide a plausible explanation for their behaviour, where possible. The bugs are presented in the order of the number of isolation levels under which they manifest.
+We present a brief overview of the \textit{interesting bugs}, and provide a plausible explanation for their behavior, where possible. The bugs are presented in the order of the number of isolation levels under which they manifest.
 
 \subsection*{Bug MDEV-19535}
 
 This bug is replicated on \textit{MariaDB 10.4.5}, and manifests under \textit{Repeatable Read} and {Serializable}.
 
-For compatibility, \textit{MariaDB} provides an \code{sql\_mode} variable, which can be used to mimic the behaviour of other DBMSs.
+For compatibility, \textit{MariaDB} provides an \code{sql\_mode} variable, which can be used to mimic the behavior of other DBMSs.
 
-When the \code{sql\_mode} is set to \code{ORACLE}, \textit{MariaDB} ommits to add exclusive locks when running an \textit{SELECT FOR UPDATE} statement. This leads to incorrect hehaviour when running \textit{SELECT FOR UPDATE} statements under \textit{Repeatable Read} and \textit{Serializable} isolation levels, as reads are no longer guaranteed to be repeatable.
+When the \code{sql\_mode} is set to \code{ORACLE}, \textit{MariaDB} omits to add exclusive locks when running an \textit{SELECT FOR UPDATE} statement. This leads to incorrect behavior when running \textit{SELECT FOR UPDATE} statements under \textit{Repeatable Read} and \textit{Serializable} isolation levels, as reads are no longer guaranteed to be repeatable.
 
 \subsection*{Bug MDEV-26642}
 
@@ -257,7 +257,7 @@ When the \code{sql\_mode} is set to \code{ORACLE}, \textit{MariaDB} ommits to ad
 This bug is replicated on \textit{MariaDB 10.6.17}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}. The bug was fixed by a PR in version \textit{$10.6.18$}, and was marked as affecting \textit{MySQL} too.
 
 
-The bug affects concurent modifications of the same table: if a transaction updates a row of the table, and another transaction updates the entire table, the second transaction does not see its own modifications. The main part of the PoC can be seen in Figure \ref{fig:MDEV-26642}.
+The bug affects concurrent modifications of the same table: if a transaction updates a row of the table, and another transaction updates the entire table, the second transaction does not see its own modifications. The main part of the PoC can be seen in Figure \ref{fig:MDEV-26642}.
 
 
 \begin{figure}
@@ -286,7 +286,7 @@ The \textit{Read Uncommitted} isolation level always displays the latest state o
 \subsection*{Bug MDEV-26643}
 
 
-This bug is replicated on \textit{MariaDB 10.5.12}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}. The bug was fixed by a PR.The PoC is very similar to \textit{MDEV-26642}, and can be seen in Figure \ref{fig:MDEV-26643}.
+This bug is replicated on \textit{MariaDB 10.5.12}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}. The bug was fixed by a PR. The PoC is very similar to \textit{MDEV-26642}, and can be seen in Figure \ref{fig:MDEV-26643}.
 
 
 \begin{figure}
@@ -311,13 +311,13 @@ The bug is caused by an improperly used semi-consistent read, where \textit{Read
 
 This bug is replicated on \textit{MariaDB 10.8.3}, and manifests under \textit{Read Uncommitted} and \textit{Read Committed}, by causing a crash of the DBMS server.
 
-The root cause of the bug is an incorrect and redundant check of the data retrival status in \textit{InnoDB}, which leads to potential assertion failures. The bug was fixed by erasing the redundant check.
+The root cause of the bug is an incorrect and redundant check of the data retrieval status in \textit{InnoDB}, which leads to potential assertion failures. The bug was fixed by erasing the redundant check.
 
 \subsection*{Bug MDEV-29565}
 
 This bug is replicated on \textit{MariaDB 10.8.3}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}.
 
-While confirmed as intented behaviour, this is caused by an poorly documented feature of \textit{InnoDB}, which allows changes made by other transactions to be visible in the current one if changes are made to the same records \cite{mysqlconsistentread}. The PoC is simplified in Figure \ref{fig:MDEV-29565}.
+While confirmed as intended behavior, this is caused by an poorly documented feature of \textit{InnoDB}, which allows changes made by other transactions to be visible in the current one if changes are made to the same records \cite{mysqlconsistentread}. The PoC is simplified in Figure \ref{fig:MDEV-29565}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -357,9 +357,9 @@ This bug dramatically increases latency, but does not cause deadlocks or crashes
 
 This bug is replicated on \textit{MySQL 5.7.34}, and manifests under \textit{Repeatable Read}.
 
-The bug is marked as verified, but we strongly consider the PoC actually works as intented. The PoC is simplified in Figure \ref{fig:MYSQL-108528}.
+The bug is marked as verified, but we strongly consider the PoC actually works as intended. The PoC is simplified in Figure \ref{fig:MYSQL-108528}.
 
-In the PoC, one transaction updates a table and commits. Another concurent transaction does not see the changes made by the first transaction, however those changes become visible when the second transaction tried to update a table. This behaviour is similar to the behaviour of \textit{MDEV-29565}, and we consider it is due to the same poorly-documented feature \cite{mysqlconsistentread}.
+In the PoC, one transaction updates a table and commits. Another concurrent transaction does not see the changes made by the first transaction, however those changes become visible when the second transaction tried to update a table. This behavior is similar to the behavior of \textit{MDEV-29565}, and we consider it is due to the same poorly-documented feature \cite{mysqlconsistentread}.
 
 
 \begin{figure}
@@ -420,7 +420,7 @@ conn_2> SELECT pkId, b, c FROM t where   -- Should be empty but
 
 This bug is replicated on \textit{MySQL 8.0.12}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}. The bug was fixed as part of the \textit{MySQL 8.0.16} release.
 
-The bug is caused by a misshandling of the \code{INSERT ... ON DUPLICATE KEY} statement. When a record with a conflicting primary key is inserted, the key should be changed and a row lock created. However, under \textit{Read Committed} and \textit{Repeatable Read}, a range lock is created instead. The PoC is simplified in Figure \ref{fig:MYSQL-93806}.
+The bug is caused by a mishandling of the \code{INSERT ... ON DUPLICATE KEY} statement. When a record with a conflicting primary key is inserted, the key should be changed and a row lock created. However, under \textit{Read Committed} and \textit{Repeatable Read}, a range lock is created instead. The PoC is simplified in Figure \ref{fig:MYSQL-93806}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -445,7 +445,7 @@ conn_1> insert into t values(4, 4); -- Is needlessly blocked by
 
 This bug is replicated on \textit{MySQL 5.7.25}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}. The bug is not present in \textit{MySQL 8.0} or later, so it was not fixed.
 
-The bug manifests by causing diry-reads when inserting multiple rows on one transaction, and performing a complex query on another transaction. The PoC is simplified in Figure \ref{fig:MYSQL-94338}. We do not know the root cause of the bug, as no bug fix was made available.
+The bug manifests by causing dirty-reads when inserting multiple rows on one transaction, and performing a complex query on another transaction. The PoC is simplified in Figure \ref{fig:MYSQL-94338}. We do not know the root cause of the bug, as no bug fix was made available.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -496,7 +496,7 @@ conn_0> select /*+ USE_INDEX_MERGE(t, ia, ib) */ *
 
 This bug is replicated on \textit{TiDB}, on the custom commit \code{3a32bd2d} using the \textit{TiKV} key-value store, and manifests under \textit{Read Committed}. The bug was closed by a PR pushed to the \code{master} branch on \textit{2021-01-12}.
 
-The bug occurs because of missing consistency checks which allow one concurent transaction to perform DDL (Data Definition Language) operations on a table (like inserting / deleting columns or deleting indexes), while another transaction is reading from the same table. The PoC is simplified in Figure \ref{fig:TIDB-21498}.
+The bug occurs because of missing consistency checks which allow one concurrent transaction to perform DDL (Data Definition Language) operations on a table (like inserting / deleting columns or deleting indexes), while another transaction is reading from the same table. The PoC is simplified in Figure \ref{fig:TIDB-21498}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -517,7 +517,7 @@ This bug was reported on a specific commit of the \code{master} branch, is repli
 
 The bug is due to the usage of the \code{tidb\_snapshot} system variable, which sets the timestamp delimiting the visibility of the records \cite{tidbsnapshot}. 
 
-Under \textit{Repetable Read}, setting this timestamp and the performing a \code{SELECT} statement breaks the isolation level guarantees. The PoC is simplified in Figure \ref{fig:TIDB-25176}.
+Under \textit{Repeatable Read}, setting this timestamp and the performing a \code{SELECT} statement breaks the isolation level guarantees. The PoC is simplified in Figure \ref{fig:TIDB-25176}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -538,7 +538,7 @@ conn_0> select a from test.ttt where id=1;            -- [(2)].
 
 This bug is replicated on \textit{TiDB 5.4.0} when using the \textit{TiKV} key-value store, and manifests under \textit{Repeatable Read}. 
 
-The bug is caused by the mismatch of rows created by concurent transactions: if a transaction performs a statement matching an entire table while another transaction holds an exclusive lock on the table, the first transaction will see an inconsistent state. The PoC is simplified in Figure \ref{fig:TIDB-33315}.
+The bug is caused by the mismatch of rows created by concurrent transactions: if a transaction performs a statement matching an entire table while another transaction holds an exclusive lock on the table, the first transaction will see an inconsistent state. The PoC is simplified in Figure \ref{fig:TIDB-33315}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -559,8 +559,8 @@ conn_1> COMMIT;
 
 \section{Conclusion}
 
-In this chapter, we present an analysis of a few isolation bugs we consider \textit{interesting}, as they manifest under a subset of the isolation levels supported by the DBMSs. We provide a brief overview of the bugs, and a plausible explanation for their behaviour.
+In this chapter, we present an analysis of a few isolation bugs we consider \textit{interesting}, as they manifest under a subset of the isolation levels supported by the DBMSs. We provide a brief overview of the bugs, and a plausible explanation for their behavior.
 
 We find that the bugs are caused by a variety of reasons, from design issues of the storage engine to poorly documented features of the DBMSs. We also find that some bugs are quickly fixed, while others are left unfixed until they \textit{fix themselves}, i.e. they are no longer present in the latest versions of the DBMSs.
 
-The main cause of bugs is the improper handling of locking and MVCC (Multi-Version Concurrency Control) mechanisms, which are the core of the transactional guarantees provided by the DBMSs, as \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} define their isolation levels based on locking behaviour and transaction visibility \cite{mysqlisolationlevels,mariadbtransactions,tidbisolationlevels}.
+The main cause of bugs is the improper handling of locking and MVCC (Multi-Version Concurrency Control) mechanisms, which are the core of the transactional guarantees provided by the DBMSs, as \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} define their isolation levels based on locking behavior and transaction visibility \cite{mysqlisolationlevels,mariadbtransactions,tidbisolationlevels}.
