@@ -6,14 +6,14 @@
 \section{Problems and Motivations}
 
 % Complexity of databases.
-Modern database management systems, which often rely on a relational model, were introduced in the 1970s \cite{codd1970relational}. Since then, the amount of data that needs to be stored and processed and the usecases of DBMSs has grown exponentially, which lead to the development of an entire industry of database software.
-The growing discrepancy between storage capacity and processing power, and the cost efficiency of buying multiple smaller machines \cite{barroso2022datacenter} pushed towards the development of concurency mechanisms and of distributed databases, able to distribute load across multiple machines and users. Distributed databases are essential for virtually all modern large-scale applications, such as social networks, e-commerce, cloud computing or reseach.
+Modern database management systems, which often rely on a relational model, were introduced in the 1970s \cite{codd1970relational}. Since then, the amount of data that needs to be stored and processed and the use cases of DBMSs has grown exponentially, which lead to the development of an entire industry of database software.
+The growing discrepancy between storage capacity and processing power, and the cost efficiency of buying multiple smaller machines \cite{barroso2022datacenter} pushed towards the development of concurrency mechanisms and of distributed databases, able to distribute load across multiple machines and users. Distributed databases are essential for virtually all modern large-scale applications, such as social networks, e-commerce, cloud computing or research.
 
 % Fuzzing.
 Like all software, DBMSs are prone to bugs, especially considering the diminishing returns of optimizing their performance, which is in many cases the bottleneck of the entire system. While unit and integration tests are essential in the development of any software \cite{testimblogtests}, they are not enough to ensure the correctness of such complex systems. This is why, many current testing strategies rely on the use of fuzzing, a technique that generates random inputs to the system under test, in order to find bugs \cite{liang2018fuzzing}.
 
 % Motivation.
-The motivation and goal of this project is to replicate existant DBMS transactional bugs reported to their respective issue trackers, and reported by or analysed in other works \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, cui2024understanding_ICSE2024}, in order to undestand how they corelate with isolation levels. Then, using the gained insights and using a novel fuzzing technique introduced by Jiang, Z.\ et al. \cite{jiang2023detecting} based on SQL instrumentation, we try to find new bugs. We aim to generate the set of Adya dependencies \cite{adya1999weak} of randomly generated concurent transactions, and to use this information to detect bugs in the concurrency and isolation mechanisms of a distributed database.
+The motivation and goal of this project is to replicate existing DBMS transactional bugs reported to their respective issue trackers, and reported by or analyzed in other works \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, cui2024understanding_ICSE2024}, in order to understand how they correlate with isolation levels. Then, using the gained insights and using a novel fuzzing technique introduced by Jiang, Z.\ et al. \cite{jiang2023detecting} based on SQL instrumentation, we try to find new bugs. We aim to generate the set of Adya dependencies \cite{adya1999weak} of randomly generated concurrent transactions, and to use this information to detect bugs in the concurrency and isolation mechanisms of a distributed database.
 
 
 
@@ -35,9 +35,9 @@ The motivation and goal of this project is to replicate existant DBMS transactio
 Overall, we make the following contributions in this project.
 
 \begin{enumerate}
-    \item We develop a new testing framework, levraging containerisation techniques for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
-    \item Using the testing framework, we replicate TODO bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
-    \item We analyse the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
+    \item We develop a new testing framework, leveraging containerization techniques for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
+    \item Using the testing framework, we replicate $135$ bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
+    \item We analyze the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
     \item We develop a novel black-box fuzzing technique, based on SQL instrumentation and Adya dependency graphs.
-    \item TODO: We implement the fuzzing technique, by modifying an existing fuzzing framework \cite{jiang2023detecting}. 
+    \item We implement the fuzzing technique, by modifying an existing fuzzing framework \cite{jiang2023detecting}. 
 \end{enumerate}

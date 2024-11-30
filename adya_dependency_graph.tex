@@ -17,17 +17,25 @@ As \textit{isolation bugs} are not necessarily \textit{logic bugs}, i.e. not bug
 \begin{itemize}
     \item Testing high concurrency workloads, required for capturing edge cases where isolation bugs occur, is hard to achieve due to an exponential growth in the number of possible states.
     \item DBMSs are not fully compatible with each others, and concurrent workloads are inherently non-deterministic, making it hard to check for bugs by exploring differences between DBMSs.
-    \item Semi-automatic techniques such as \textit{Fuzzing} require an \textit{oracle} to determine if the output is correct, which is hard to achieve in the case of isolation bugs.
+    \item Semi-automatic techniques such as \textit{fuzzing} require an \textit{oracle} to determine if the output is correct, which is hard to achieve in the case of isolation bugs.
 \end{itemize}
 
 Current techniques avoid these problems by using a white-box testing approach \cite{clark2024validating}, using the database system itself as a testing oracle \cite{jiang2023detecting}, or running workloads on multiple DBMSs to check for disparities \cite{cui2022differentially_ASE2022}.
 
-In this chapter, we introduce a novel bug-finding technique, which leverages Direct Serialization Graphs (DSG) introduced by Adya, A. \cite{adya1999weak} and SQL-level instrumentation introduced by Jiang, Z. \cite{jiang2023detecting}. This technique is a modification of the one used by Jiang, Z.. We also implement a tool based on our technique on top of \textit{TxCheck}, which we modify to suit our needs.
+Following our work on the bug replication testbed, we explore potential next steps and decide to focus on \textit{TxCheck}, a database fuzzer, for several reasons:
+
+\begin{itemize}
+    \item \textit{TxCheck} is developed at ETH Zürich, making it a natural choice for in-depth research.
+    \item It has successfully identified an impressive $56$ bugs in \textit{MariaDB}, \textit{MySQL}, and \textit{TiDB}, some of which we analyzed using our bug testbed.
+    \item \textit{TxCheck} was released last year (2023), making it highly relevant.
+\end{itemize}
+
+In this chapter, we introduce our work on enhancing a novel bug-finding technique that leverages Direct Serialization Graphs (DSG) introduced by Adya, A. \cite{adya1999weak} and SQL-level instrumentation introduced by Jiang, Z. \cite{jiang2023detecting}. Our approach builds upon and modifies the method used by Jiang, Z. Additionally, we implement a tool based on our technique within the \textit{TxCheck} fuzzer, which we adapt to meet our requirements.
 
 
 \section{Database Model Used}
 
-For testing the correct behavior of database systems, we need well-defined specifications we can test against. While some techniques rely on the DBMSs themselves for self-validating or cross validating results \cite{cui2022differentially_ASE2022}, other bug-finding techniques express DBMS isolation bugs as violated constraints in the Direct Serialization Graph (DSG) built following  Adya's data model \cite{jiang2023detecting,clark2024validating}, directed labeled graphs in which nodes are transactions and directed edges are dependencies.
+For testing the correct behavior of database systems, we need well-defined specifications we can test against. While some techniques rely on the DBMSs themselves for self-validating or cross validating results \cite{cui2022differentially_ASE2022}, other bug-finding techniques express DBMS isolation bugs as violated constraints in the Direct Serialization Graph (DSG) built following Adya's data model \cite{jiang2023detecting,clark2024validating}, directed labeled graphs in which nodes are transactions and directed edges are dependencies.
 
 In particular, \textit{TxCheck}, which this project builds on, uses a mixture of both methods:
 \begin{itemize}
@@ -62,7 +70,7 @@ Throughout this work, we heavily reuse the definitions and notations introduced 
 \end{definition}
 
 \begin{definition}
-    \textbf{Directly Item-Read-Depends}: $T_j$ \textit{directly item-read-depends} on $T_i$ if $T_j$ reads an some object version instaleld by $T_i$.
+    \textbf{Directly Item-Read-Depends}: $T_j$ \textit{directly item-read-depends} on $T_i$ if $T_j$ reads an some object version installed by $T_i$.
 \end{definition}
 
 \begin{definition}
@@ -74,7 +82,7 @@ Throughout this work, we heavily reuse the definitions and notations introduced 
 \end{definition}
 
 \begin{definition}
-    \textbf{Directly Item-Anti-Depends}: $T_j$ \textit{directly item-anty-depends} on $T_i$ if $T_i$ reads some object version $x_k$ and $T_j$ installs a later version $x_j$.
+    \textbf{Directly Item-Anti-Depends}: $T_j$ \textit{directly item-anti-depends} on $T_i$ if $T_i$ reads some object version $x_k$ and $T_j$ installs a later version $x_j$.
 \end{definition}
 
 \begin{definition}
@@ -118,36 +126,36 @@ The most straight-forward way to extract DSG dependencies is to modify the sourc
 
 A less intrusive approach, which considers the DBMS as a black box (thus being easily ported across different systems), is to use SQL-level instrumentation, a technique pioneered by Jiang, Z., which consists of systematically exposing the internal state of the DBMS by injecting \textit{SELECT} statements in the SQL queries \cite{jiang2023detecting}.
 
-The informal intuition behind SQL-level instrumentation is that we want to know the current state of the database, but lack the white-box access to the DBMS internals. As we can only query the database, we infer the dependencies by injecting \textit{SELECT} statements in testcases. We instrument the SQL queries by adding instrumentation code right before and right after each original SQL statement.
+The informal intuition behind SQL-level instrumentation is that we want to know the current state of the database, but lack the white-box access to the DBMS internals. As we can only query the database, we infer the dependencies by injecting \textit{SELECT} statements in test cases. We instrument the SQL queries by adding instrumentation code right before and right after each original SQL statement.
 
 A few challenging parts are:
 
 \begin{itemize}
-    \item Ensuring the instrumentation code is not interrupted by locking or other operations. This is addressed by re-ordering statements in the testcase, and erasing them if no viable scheduling order can be found.
-    \item Ensuring that every table of the database stores a \textit{version} column, which stores the version of the object, required for understanding the view a statement has access to. This is addressed by adding a \textit{version} column to each table.
-    \item Concurrency issues, such as the non-deterministic locking and unlocking behavior of transactions. This is addressed by spacing out the statements, and ensuring that no transaction locking takes place.
+    \item Ensuring the instrumentation code is not interrupted by locking or other operations. This is addressed by re-ordering statements in the test case, and erasing them if no viable scheduling order can be found.
+    \item Ensuring that every table of the database stores versioning information for each object, required for understanding the view a statement has access to. This is addressed by adding a \textit{version} column to each table.
+    \item Concurrency issues, such as the non-deterministic locking and unlocking behavior of transactions. This is addressed by spacing out the statements temporally, and ensuring that no transaction locking takes place.
 \end{itemize}
 
 
 \subsection{Instrumentation Statements}
 
-We instrument SQL statements by encapsulating them with instrumentation placed before and after statements, which expose the transaction's view of the database. As we built on top of \textit{TxCehck}, the instrumentation we use is very similar to the original one, with the addition of $3$ new instrumentation types. The instrumentation types we use are:
+We instrument SQL statements by encapsulating them with instrumentation placed before and after statements, which expose the transaction's view of the database. As we built on top of \textit{TxCheck}, the instrumentation we use is very similar to the original one, with the addition of $3$ new instrumentation types. The instrumentation types we use are:
 
 \begin{itemize}
     \item \textbf{Before Write Read (BWR)}: Before a write operation, a \textit{SELECT} statement is added to read the version of overwritten objects.
     \item \textbf{After Write Read (AWR)}: After a write operation, a \textit{SELECT} statement is added to read the new version of the overwritten objects.
     \item \textbf{Version Set Read (VSR)}: Before reads and predicated statements, a \textit{SELECT} statement is added to read the version set of all objects in the used tables.
-    \item \textbf{Before Predicate Match (BPM)}: Before a write operation, a \textit{SELECT} statement is added for each predicate that appears in the testcase, to read the objects and versions that match the predicate.
+    \item \textbf{Before Predicate Match (BPM)}: Before a write operation, a \textit{SELECT} statement is added for each predicate that appears in the test case, to read the objects and versions that match the predicate.
     \item \textbf{After Predicate Match (APM)}: Similar to the \textit{Before Predicate Match}, but is inserted after the write operation.
     \item \textbf{Predicate Match (PM)}: Before an operation that contains a predicate, a \textit{SELECT} statement reading the objects and versions that match the predicate is added.
 \end{itemize}
 
-This instrumentation has the potential of introducing unwanted locking behavior (i.e. the \textit{SELECT} statements cause table locks), which is why we need to ensure that the instrumentation code is not interrupted by locking or other operations. In Figure \ref{fig:sql_instrumentation_sample}, we show the instrumentation of a trivial testcase.
+This instrumentation has the potential of introducing unwanted locking behavior (i.e. the \textit{SELECT} statements cause table locks), which is why we need to ensure that the instrumentation code is not interrupted by locking or other operations. In Figure \ref{fig:sql_instrumentation_sample}, we show the instrumentation of a trivial test case.
 
 \begin{figure}[!h]
     \centering
     \includegraphics[width=\linewidth]{assets/sql_instrumentation_sample.png}
-    \caption{Instrumentation of a (simplified) testcase.}
+    \caption{Instrumentation of a (simplified) test case.}
     \label{fig:sql_instrumentation_sample}
 \end{figure}
 
@@ -159,12 +167,12 @@ This instrumentation has the potential of introducing unwanted locking behavior 
 
 Our tool is based on \textit{TxCheck} \cite{jiang2023detecting}, which we modify to suit our needs. Our dependency extraction process is thus similar to the one used in \textit{TxCheck}, with slight modification, which are centered around anti-dependencies. As such, we will not go into detail about the direct read dependencies, direct item anti-dependencies, and direct item write dependencies, as they are similar to the ones used by Jiang, Z. \cite{jiang2023detecting}, where a complete and sound technique for extracting them is described, and will focus on the direct predicate anti dependencies and predicate write dependencies.
 
-Given a testcase consisting of intertwined transactions, we do the following:
+Given a test case consisting of intertwined transactions, we do the following:
 
 \begin{itemize}
     \item Add instrumentation statements to the SQL queries.
     \item Ensure that the instrumentation code is not interrupted by locking or other operations.
-    \item Run the testcase, saving the results of the \textit{SELECT} statements.
+    \item Run the test case, saving the results of the \textit{SELECT} statements.
     \item Extract the DSG edges with the help of the instrumentation results. 
 \end{itemize}
 
@@ -186,12 +194,12 @@ We prove that our method for extracting overwrites is both sound and complete.
 
 \textit{Soundness}: If we flag $A$ as \textit{overwriting} $B$, then there exists a primary $pk$ and two versions $v$ and $v'$ such that $v$ is the version of $pk$ installed by $A$, $v'$ is the version of $pk$ present in the version set of $B$, and $v$ happens after $v'$ in the list of versions for $pk$. Furthermore, the \textit{Before Predicate Match} instrumentation of $A$ for the predicate of $B$ contains $pk$, but the \textit{After Predicate Match} instrumentation of $A$ for the predicate of $B$ does not, or the other way around, meaning that $A$ makes $pk$ no longer match the predicate of $B$ or the other way around. This is the definition of an \textit{overwrite}.
 
-\textit{Completeness}: If $A$ overwrites $B$, then there exists a record $x$ for which $A$ installs a version later than the one seen by $B$, and the two versions do not match the predicate of $B$. If we call the primary key of $x$ $pk$, the version installed by $A$ $v$, and the version seen by $B$ $v'$, then $v$ happens after $v'$ in the list of versions for $pk$, and the \textit{Before Predicate Match} instrumentation of $A$ for the predicate of $B$ contains $pk$, but the \textit{After Predicate Match} instrumentation of $A$ for the predicate of $B$ does not, or the other way around. This means that our technique correctly identifies $A$ as overwriting $B$.
+\textit{Completeness}: If $A$ overwrites $B$, then there exists a record $x$ for which $A$ installs a version later than the one seen by $B$, and the two versions do not match the predicate of $B$. Let us denote the primary key of $x$ as $pk$, the version installed by $A$ as $v$, and the version seen by $B$ as $v'$. Then, $v$ happens after $v'$ in the list of versions for $pk$, and the \textit{Before Predicate Match} instrumentation of $A$ for the predicate of $B$ contains $pk$. However, the \textit{After Predicate Match} instrumentation of $A$ for the predicate of $B$ does not, or the other way around. This means that our technique correctly identifies $A$ as overwriting $B$.
 \end{proof}
 
 \subsection{Extracting Predicate Write Dependencies}
 
-Being able to check if one statement overwrites another, we can trivially extract \textit{direct predicate anti-dependencies} by checking if a write statement overwrites the predicate of a read statement.
+We proved that we are able to check if one statement overwrites another in a sound and complete manner. This allows us to trivially extract \textit{direct predicate anti-dependencies} by checking if a write statement overwrites the predicate of a read statement.
 
 \begin{proof}
     Let $A$ be a write statement and $B$ be a read statement. If $A$ overwrites $B$, then the transaction containing $A$ by definition \textit{directly predicate anti-depends} on the transaction containing $B$.
@@ -244,16 +252,16 @@ The fuzzing approach of our technique is similar to the one used by \textit{TxCh
 
 Our technique is a complete and sound method of extracting of the DSG dependencies, and a step forward in the direction of behavior-based DBMS testing. However, it suffers from similar limitations as the original technique used by \textit{TxCheck}:
 \begin{itemize}
-    \item The fuzzing is quite slow, with the testcase generation and finding a non-blocking schedule being the bottleneck.
-    \item While our technique is able to run under any of the isolation levels supported by the DBMS, the lower the isolation level the less checks we can perform, as the DSG has less restrictions. In particular, the \textit{Read Uncommitted} isolation level imposes almost no restrictions on the DSG, which makes it hard to find bugs.
+    \item The fuzzing is quite slow, with the test case generation and finding a non-blocking schedule being the bottleneck.
+    \item While our technique is able to run under any of the isolation levels supported by the DBMS, the lower the isolation level the less checks we can perform, as the DSG has fewer restrictions. In particular, the \textit{Read Uncommitted} isolation level imposes almost no restrictions on the DSG, which makes it hard to find bugs.
     \item Similarly to the original \textit{TxCheck} technique, scheduling for some valid executions might fail due to the additional locking created by the instrumentation.
 \end{itemize}
 
-We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables, while the Adya model assumes that deleted rows enter a \textit{erased} state, in which they still exist belong in \textit{Version Sets}. This can be solved by:
+We only implemented support \textit{SELECT}, \textit{UPDATE} and \textit{INSERT} statements. However, support for the \textit{DELETE} statements is also possible. The main caveat is that \textit{DELETE} removes entries from tables, while the Adya model assumes that deleted rows enter an \textit{erased} state, in which they still exist belong in \textit{Version Sets}. This can be solved by:
 \begin{itemize}
     \item Having a \textit{deleted} copy of each table, initially empty.
     \item Before a \textit{DELETE} statement, inserting the deleted rows in the \textit{deleted} table.
-    \item When performing the \textit{Version Set Read} instrumentation, also read the entries from the \textit{deleted} table.
+    \item When performing the \textit{Version Set Read} instrumentation, also reading the entries from the \textit{deleted} table.
 \end{itemize}
 
 \section{Conclusion}

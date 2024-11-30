@@ -21,11 +21,11 @@ The framework is modular, helping any future developer to easily extend it (for 
 
 \begin{itemize}
     \item The \textit{podman connector}: This component handles the interaction with the \textit{Podman} engine, and is responsible for starting, stopping, downloading and managing containers running DBMS instances.
-    \item The \textit{test parser}: This component handles the parsing of testcases, using a specific format, and is responsible for creating the internal representation of the testcases.
+    \item The \textit{test parser}: This component handles the parsing of test cases, using a specific format, and is responsible for creating the internal representation of the test cases.
     \item The \textit{mysql connector}: This component handles the connection to a DBMS instance (running within a container), and is responsible for executing statements in order and extracting the results.
     \item The \textit{transaction runner}: This component handles the execution of all the statements in a transaction, and runs on different threads for concurrency.
-    \item The \textit{scenario runner}: This component runs testcases under a specific configuration.
-    \item The \textit{test runner}: This component orchestrates the execution of all required testcases under all specified configurations. 
+    \item The \textit{scenario runner}: This component runs test cases under a specific configuration.
+    \item The \textit{test runner}: This component orchestrates the execution of all required test cases under all specified configurations. 
 \end{itemize}
 
 \section{Custom DBMS Version}
@@ -71,16 +71,16 @@ In our project, we provide \textit{Dockerfiles} for \textit{MySQL}, \textit{Mari
 
 \section{Testing Meta-Language}
 
-For a given testcase, specifying the statements and their execution order on the DBMS is hard, due to multiple reasons:
+For a given test case, specifying the statements and their execution order on the DBMS is hard, due to multiple reasons:
 \begin{itemize}
     \item Transactional and isolation bug PoCs usually need multiple concurrent transactions, making a simple \textit{SQL} script insufficient.
     \item Some statements are expected to fail, which might lead to the termination of a standard script.
     \item The order of the statement execution (and sometimes the locking order) is important for the bug to manifest.
 \end{itemize} 
 
-To address these issues, the \textit{MySQL} development team created a testing framework which encodes testcases in a special format \cite{mysqltestrun}. Using this format, however, is cumbersome, as we only need a small subset of the features, and using the \textit{MySQL} interpreter would make it hard to test other DBMSs. 
+To address these issues, the \textit{MySQL} development team created a testing framework which encodes test cases in a special format \cite{mysqltestrun}. Using this format, however, is cumbersome, as we only need a small subset of the features, and using the \textit{MySQL} interpreter would make it hard to test other DBMSs. 
 
-We thus create a small, custom scripting language on top of \textit{Python}, inspired by the way bug reporters describe their PoCs. In Figure \ref{fig:bug_metalanguage_sample}, we present a sample testcase for the bug \textit{MDEV-26642} in \textit{MariaDB 10.6.17}.
+We thus create a small, custom scripting language on top of \textit{Python}, inspired by the way bug reporters describe their PoCs. In Figure \ref{fig:bug_metalanguage_sample}, we present a sample test case for the bug \textit{MDEV-26642} in \textit{MariaDB 10.6.17}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{Python}
@@ -119,16 +119,16 @@ def get_scenarios(isolation_level: IsolationLevel):
 \caption{Replication script for the bug \textit{MDEV-26642} in \textit{MariaDB 10.6.17}.} \label{fig:bug_metalanguage_sample}
 \end{figure}
 
-Each testcase provides the following information:
+Each test case provides the following information:
 \begin{itemize}
     \item The \textit{DBMS} and version on which the bug was reported.
     \item The bug ID and a link to the bug report.
-    \item The setup script, which is executed before the testcases. If the setup script is too long, it can be stored in a separate file.
+    \item The setup script, which is executed before the test cases. If the setup script is too long, it can be stored in a separate file.
     \item The description of the bug.
-    \item The scenarios, which are the testcases that will be executed (one for each isolation level). Each scenario is a sequence of statements, executed in parallel by different connections.
+    \item The scenarios, which are the test cases that will be executed (one for each isolation level). Each scenario is a sequence of statements, executed concurrently by different transactions.
 \end{itemize}
 
-For running a testcase, the tool provisions the required DBMS instance, executes the setup script (if present), and then runs the scenarios under all supported isolation levels. For each transaction a separate connection to the DBMS server is created. The results are then stored in a report, which can be further analyzed.
+For running a test case, the tool provisions the required DBMS instance, executes the setup script (if present), and then runs the scenarios under all supported isolation levels. For each transaction a separate connection to the DBMS server is created. The results are then stored in a report, which can be further analyzed.
 
 \section{Usage}
 
@@ -171,7 +171,7 @@ The testing framework, called \textit{ReplBug} is invoked from the CLI. The main
     \item \textbf{\code{shell}} (See Figure \ref{fig:replb_shell}): Starts one or multiple \textit{MySQL}, \textit{MariaDB} or \textit{TiDB} shells, connected to a specific version of the DBMS. If the version is not present on the local machine, the tool will attempt to pull the image from Docker Hub.
     \item \textbf{\code{server}} (See Figure \ref{fig:repl_server}): Starts a specific version of the \textit{MySQL}, \textit{MariaDB} or \textit{TiDB} DBMS and provides the required details (host, port, user) for connecting to the server.
     \item \textbf{\code{test}} (See Figure \ref{fig:repl_test}): Runs the scenarios of some known bugs (which have to be written in a specific format prior), and automatically generates reports of the execution.
-    \item \textbf{\code{list}}: Returns a list of the testcases available in the tool (optionally a \textit{regex} can be passed to filter the results).
+    \item \textbf{\code{list}}: Returns a list of the test cases available in the tool (optionally a \textit{regex} can be passed to filter the results).
 \end{itemize}
 
 The tool can be either used from the CLI by passing arguments, or in interactive mode, where the tool exposes a shell that can be used by the user  (see Figure \ref{fig:repl_interactive}).
@@ -199,16 +199,16 @@ The methodology for replicating a bug is the following:
     \item We search for the list of bugs reported by a paper, and filter the bugs that are transactional or isolation bugs (as reported by the paper), and manifest on one of the DBMSs we support (\textit{MySQL}, \textit{MariaDB} and \textit{TiDB}).
     \item We read the bug report in the DBMS's bug tracker, extract the version of the DBMS on which the bug was reported and a PoC.
     \item If the DBMS version is not available as a pre-built binary, we build the DBMS from source using the \textit{Dockerfile} templates provided by the \textit{ReplBug} tool.
-    \item We write a testcase in the \textit{ReplBug} testing framework, using the meta-language described in the previous chapter.
-    \item We run the testcase on the DBMS, under all supported isolation levels.
-    \item We sometimes have to adjust the testcase, as some reports do not include the exact version of the DBMS, or the PoC is precise enough. 
+    \item We write a test case in the \textit{ReplBug} testing framework, using the meta-language described in the previous chapter.
+    \item We run the test case on the DBMS, under all supported isolation levels.
+    \item We sometimes have to adjust the test case, as some reports do not include the exact version of the DBMS, or the PoC is precise enough. 
 \end{itemize}
 
 Within this project, we successfully replicated $115$ bugs, out of which $33$ manifest on the \textit{MariaDB} DBMS, $17$ manifest on \textit{MySQL} and $65$ manifest on \textit{TiDB}. The distribution of the bugs by DBMS and reporting paper can be seen in Figure \ref{fig:interesting_bugs_by_paper}.
 
 \section{Analysis}
 
-We run the \textit{ReplBug} testing framework on the selected bugs, and we generate reports of their execution. We then read the reports, and analyze the output of the testcases. We then explore the corelation between the bugs and the isolation levels.
+We run the \textit{ReplBug} testing framework on the selected bugs, and we generate reports of their execution. We then read the reports, and analyze the output of the test cases. We then explore the corelation between the bugs and the isolation levels.
 
 We find that $100$ bugs manifest on all isolation levels supported by the DBMS, and $15$ bugs only manifest on a subset of the isolation levels. In the reminder of this chapter, we refer to the bugs that manifest only on a subset of the isolation levels as \textit{interesting bugs}. In Figure \ref{fig:interesting_bugs_by_paper}, we present the distribution of the \textit{interesting bugs} by DBMS and reporting paper.
 
@@ -338,7 +338,7 @@ conn_0> COMMIT;
 
 This bug is replicated on \textit{MySQL 5.7.31}, and manifests under \textit{Serializable}.
 
-When the \code{innobase\_query\_caching\_of\_table\_permitted} flag is set to \code{true} (by passing \code{--query-cache-type=1} as an argument to the server), \textit{Serialisable} transactions are not blocked when using the cache, which causes some missing locks.
+When the \code{innobase\_query\_caching\_of\_table\_permitted} flag is set to \code{true} (by passing \code{--query-cache-type=1} as an argument to the server), \textit{Serializable} transactions are not blocked when using the cache, which causes some missing locks.
 
 The bug was fixed by properly handling \code{--query-cache-type=1} when the transaction isolation level is \textit{Serializable}.
 
@@ -347,7 +347,7 @@ The bug was fixed by properly handling \code{--query-cache-type=1} when the tran
 
 This bug is replicated on \textit{MySQL 8.0.23}, and manifests under \textit{Read Committed} and \textit{Repeatable Read}.
 
-Wen inserting rows with the same primary key multiple times (using the \code{INSERT IGNORE} statement), row locks are duplicated. Using \code{REPLACE INTO} is even worse, and adds many row locks (we believe the number of added locks is the number of matched records times the number of inserted records).
+When inserting rows with the same primary key multiple times (using the \code{INSERT IGNORE} statement), row locks are duplicated. Using \code{REPLACE INTO} is even worse, and adds many row locks (we believe the number of added locks is the number of matched records times the number of inserted records).
 
 The bug only manifests on \textit{Read Committed} and \textit{Repeatable Read}, as \textit{Serializable} has a different locking mechanism, and \textit{Read Uncommitted} does not lock the records at all.
 
@@ -357,9 +357,9 @@ This bug dramatically increases latency, but does not cause deadlocks or crashes
 
 This bug is replicated on \textit{MySQL 5.7.34}, and manifests under \textit{Repeatable Read}.
 
-The bug is marked as verified, but we strongly consider the PoC actually works as intended. The PoC is simplified in Figure \ref{fig:MYSQL-108528}.
+The bug is marked as verified, but we strongly consider the PoC actually works as intended (it is not a bug). The PoC is simplified in Figure \ref{fig:MYSQL-108528}.
 
-In the PoC, one transaction updates a table and commits. Another concurrent transaction does not see the changes made by the first transaction, however those changes become visible when the second transaction tried to update a table. This behavior is similar to the behavior of \textit{MDEV-29565}, and we consider it is due to the same poorly-documented feature \cite{mysqlconsistentread}.
+In the PoC, one transaction updates a table and commits. Another concurrent transaction does not see the changes made by the first transaction, however those changes become visible when the second transaction tried to update a table. This behavior is similar to the behavior of \textit{MDEV-29565}, and we believe it is due to the same poorly-documented feature of \textit{MySQL} \cite{mysqlconsistentread}.
 
 
 \begin{figure}
@@ -389,9 +389,9 @@ In the PoC, one transaction updates a table and commits. Another concurrent tran
 
 \subsection*{Bug MYSQL-114389}
 
-This bug is replicated on \textit{MySQL 8.0.12}, and manifests under \textit{Repeatable Read}. The bug is still present in the latest version of \textit{MySQL} (version \textit{9.1.0}). It was closed as \textit{duplicate}, but the original bug is still open.
+This bug is replicated on \textit{MySQL 8.0.12}, and manifests under \textit{Repeatable Read}. The bug is still present in the latest version of \textit{MySQL} (version \textit{9.1.0}). The report was closed as \textit{duplicate}, but the original bug report is still open.
 
-As the bug is still open, we do not know the root cause of the bug, whose PoC can be seen in Figure \ref{fig:MYSQL-114389}.
+As the bug is not fixed yet, we do not know the root cause. The PoC of the bug can be seen in Figure \ref{fig:MYSQL-114389}.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}
@@ -472,7 +472,7 @@ This bug is replicated on \textit{TiDB v4.0.8} when using the \textit{TiKV} key-
 
 The bug occurs because the \code{USE\_INDEX\_MERGE} feature does not refresh the current timestamp of the transaction, causing the transaction to potentially miss the latest committed writes. While this is correct to \textit{REPETABLE READ} transactions, \textit{READ COMMITTED} transactions are expected to see committed changes. A simplified PoC can be seen in Figure \ref{fig:TIDB-21151}. 
 
-The bug fix correctly updates the timestamp used by transactions when running under \textit{READ COMMITTED}, by invoking the \code{refreshForUpdateTSForRC} function when required.
+The bug fix correctly updates the timestamp used by transactions when running under \textit{READ COMMITTED}, by invoking the \code{refreshForUpdateTSForRC} internal function when necessary.
 
 \begin{figure}
 \begin{minted}[bgcolor=bg]{SQL}

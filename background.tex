@@ -10,7 +10,7 @@
 
 Modern database management systems (DBMS) are complex software systems that provide a high-level interface for users to interact with the underlying data. DBMSs such as \textit{MySQL} \cite{mysqlwebpage} offer a large set of features, including data storage, retrieval and manipulation.
 
-Relational DBMSs, usually exposing \textit{SQL} as a query language, form an overwhelming majority of the database systems in use today, with the 4 most popular DBMSs being relational \cite{akhtar2023popularity}. The relational model was introduced by Edgar Codd in $1970$ \cite{codd1970relational}, and offers application developpers a high-level manipulation capacity of the stored data. Information is modeled as collections of relations between properties, commonly represented as tables and rows.
+Relational DBMSs, usually exposing \textit{SQL} as a query language, form an overwhelming majority of the database systems in use today, with the 4 most popular DBMSs being relational \cite{akhtar2023popularity}. The relational model was introduced by Edgar Codd in $1970$ \cite{codd1970relational}, and offers application developers a high-level manipulation capacity of the stored data. Information is modeled as collections of relations between properties, commonly represented as tables and rows.
 
 Modern \textit{SQL} offers a \textit{Data Definition Language} (DDL) to create and modify the structure of the underlying data, and a \textit{Data Manipulation Language} (DML) to interact with the data. The DDL is composed of statements such as \textit{CREATE} and \textit{DROP}, while DML is composed of statements such as \textit{SELECT}, \textit{INSERT}, \textit{UPDATE}, and \textit{DELETE}.
 
@@ -28,7 +28,7 @@ A transaction is a sequence of instructions executed as a single isolated unit o
 
 \section{Isolation Levels}
 
-The isolation between transactions is defined by the isolation level. Stricter isolation levels offer more consitency guarantees, at the cost of concurrency and performance. While many isolations levels have been formalized, the ANSI isolation levels supported by most database systems \cite{melton1992iso_ANSI} are as follows:
+The isolation between transactions is defined by the isolation level. Stricter isolation levels offer more consistency guarantees, at the cost of concurrency and performance. While many isolation levels have been formalized, the ANSI isolation levels supported by most database systems \cite{melton1992iso_ANSI} are as follows:
 
 \begin{itemize}
     \item \textbf{Read Uncommitted}: The lowest isolation level. Transactions can read uncommitted data from other transactions.
@@ -45,15 +45,15 @@ The isolation between transactions is defined by the isolation level. Stricter i
     \label{fig:adya_isolation_levels}
 \end{figure}
 
-In modern DBMSs, the isolation levels are implemented by levraging concurrency control techniques such as locking and multi-version concurrency control (MVCC). The choice of isolation level is a trade-off between consistency gurantees and concurency performance, and is usually made by the application developer.
+In modern DBMSs, the isolation levels are implemented by leveraging concurrency control techniques such as locking and multi-version concurrency control (MVCC). The choice of isolation level is a trade-off between consistency guarantees and concurrency performance, and is usually made by the application developer.
 
 For instance, a banking application which needs to avoid double-spending will use the \textit{Serializable} isolation level, while a school grading system might want to use the \textit{Read Committed} isolation level.
 
 \section{Transaction and Isolation Bugs}
 
-DBMSs are complex software systems, with their complexity constantly increasing as dimishing returns push for more and more complex optimizations. Like all software, DBMSs are prone to bugs, which can lead to data corruption, loss of data, or crashes.
+DBMSs are complex software systems, with their complexity constantly increasing as diminishing returns push for more and more complex optimizations. Like all software, DBMSs are prone to bugs, which can lead to data corruption, loss of data, or crashes.
 
-Transaction and isolation bugs are part of a specific class of bugs residing in the transaction and isolation handling mechanisms of a DBMS. Such bugs are tricky to detect, as they often require multiple concurent transactions, might occur sporadically due to the nondeterministic nature of the concurency, and might not be easily reproducable.
+Transaction and isolation bugs are part of a specific class of bugs residing in the transaction and isolation handling mechanisms of a DBMS. Such bugs are tricky to detect, as they often require multiple concurrent transactions, might occur sporadically due to the nondeterministic nature of the concurrency, and might not be easily reproducible.
 
 While similar, transactional and isolation bugs are slightly different:
 \begin{itemize}
@@ -61,13 +61,13 @@ While similar, transactional and isolation bugs are slightly different:
     \item \textbf{Isolation bugs}: Bugs that occur when the specified isolation level is not respected. Possible manifestations include forbidden behavior, such as dirty reads, non-repeatable reads, or phantom reads.
 \end{itemize}
 
-\section{Previous Work}
+\section{Related Work}
 
 The topic of database testing is not new, with multiple techniques and tools being developed over the years. Recent work has focused on fuzzing techniques, combined with novel methods of detecting errors in random transactions \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, clark2024validating}. A recent paper by Cui, Z.\ et al. \cite{cui2024understanding_ICSE2024} makes a comprehensive survey of reported transactional bugs, a large portion discovered with the help of the before-mentioned fuzzing techniques.
 
-Our work is inspired by the surveying work of Cui, Z.\ et al. \cite{cui2024understanding_ICSE2024}, and aims to replicate and analyze bugs, by providing an easy way to test them. In the best of our knowledge, the authors of the survey did not actually replicate the collected bugs, due to constrainst on the DBMS versions (often a Git commit), and time consumption, and relied on the original bug reports.
+Our work is inspired by the surveying work of Cui, Z.\ et al. \cite{cui2024understanding_ICSE2024}, and aims to replicate and analyze bugs, by providing an easy way to test them. In the best of our knowledge, the authors of the survey did not actually replicate the collected bugs, due to constraints on the DBMS versions (often a Git commit) and time consumption, and relied on the original bug reports instead.
 
-In the second part of our project, we also build on the work of Clark, J. et al. \cite{clark2024validating} which find bugs by checking violations of the Adya dependency graph \cite{adya1999weak} in a white-box fashion, and on the work of Jiang, Z. et al. \cite{jiang2023detecting} which introduces the novel idea of SQL instrumentation. Using these two techniques, we introduce a new technique for finding isolation bugs using Adya dependency graphs in a black-box fashion, levraging the SQL instrumentation technique.
+In the second part of our project, we also build on the work of Clark, J. et al. \cite{clark2024validating} which find bugs by checking violations of the Adya dependency graph \cite{adya1999weak} in a white-box fashion, and on the work of Jiang, Z. et al. \cite{jiang2023detecting} which introduces the novel idea of SQL instrumentation. Using these two techniques, we introduce a new technique for finding isolation bugs using Adya dependency graphs in a black-box fashion, leveraging the SQL instrumentation technique.
 
 % % BELLOW NOT WRITTEN BY ME, OLD PROJECT
 % \section{Consistency Models}
