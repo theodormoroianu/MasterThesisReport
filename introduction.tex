@@ -35,9 +35,9 @@ The motivation and goal of this project is to replicate existing DBMS transactio
 Overall, we make the following contributions in this project.
 
 \begin{enumerate}
-    \item We develop a new testing framework, leveraging containerization techniques for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
-    \item Using the testing framework, we replicate $135$ bugs in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
-    \item We analyze the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs.
-    \item We develop a novel black-box fuzzing technique, based on SQL instrumentation and Adya dependency graphs.
-    \item We implement the fuzzing technique, by modifying an existing fuzzing framework \cite{jiang2023detecting}. 
+    \item We develop a new bug testing, replication and analysis framework, leveraging containerization techniques, for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
+    \item Using the testing framework, we replicate $135$ bugs occuring in the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
+    \item We analyze the reports of the replicated bugs, and we explore the corelation between isolation levels and the reported bugs. We find that a majority of the replicated bugs happen on all isolation levels supported by the DBMS, and we then analyze in depth the bugs manifesting under only a subset of the isolation levels.
+    \item As follow-up research, we build on a black-box fuzzing technique developped at ETH Z\" urich for the \textit{TxCheck} fuzzer, by improving its transaction dependency extraction, based on SQL instrumentation and Adya dependency graphs.
+    \item We then implement our enhancements to the fuzzing technique into \textit{TxCheck}, improving its ability to detect transactional anomalies by integrating SQL instrumentation and Adya dependency graph analysis into the existing framework \cite{jiang2023detecting}.
 \end{enumerate}
