@@ -229,7 +229,7 @@ In a similar way, we can extract the \textit{direct predicate write dependencies
     \end{itemize}
 \end{proof}
 
-\section{Implementation and Results}
+\section{Implementation and Evaluation}
 
 We implement our technique on top of \textit{TxCheck}, which we modify to suit our needs. As we are only looking for isolation bugs, we do not need to run the single-transaction \textit{TxCheck} uses as an oracle, so we bypass that part of the code.
 
@@ -247,6 +247,14 @@ The fuzzing approach of our technique is similar to the one used by \textit{TxCh
     \item Our approach relies on properties of the DSG to find isolation bugs.
     \item \textit{TxCheck} checks a few properties of the DSG, but mainly relies on the single-transaction oracle to find bugs, as the DSG extraction used is not sound.
 \end{itemize}
+
+Additionally, our tool does not change the fundamental behavior of \textit{TxCheck}. \textit{TxCheck} found several isolation bugs in the past \cite{jiang2023detecting}, and our improvement does not cut back on its possibility:
+\begin{itemize}
+    \item The \textit{SQL instrumentation} we insert, namely the \textit{Before Predicate Match}, the \textit{After Predicate Match} and the \textit{Predicate Match} statements, touches the same tables as the \textit{Version Set Read} statements, meaning that no additional locking behavior is triggered, and any execution trace achievable by the original \textit{TxCheck} tool is still possible.
+    \item The soundness of our approach broadens the set of permitted test cases, and does not impose any additional restriction on test cases.
+\end{itemize}
+
+In our time-constrained evaluation we were able to let our fuzzer run for a few hours at a time on a laptop, then for 48 hours in the cloud, on an \textit{AWS EC2} instance \cite{awswebpage}. During our fuzzing, we were able to trigger one event, which we reported but was categorized as \textit{intended behavior}.
 
 \section{Limitations and Future Work}
 
