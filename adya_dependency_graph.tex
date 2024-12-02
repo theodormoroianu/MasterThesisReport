@@ -254,7 +254,16 @@ Additionally, our tool does not change the fundamental behavior of \textit{TxChe
     \item The soundness of our approach broadens the set of permitted test cases, and does not impose any additional restriction on test cases.
 \end{itemize}
 
-In our time-constrained evaluation we were able to let our fuzzer run for a few hours at a time on a laptop, then for 48 hours in the cloud, on an \textit{AWS EC2} instance \cite{awswebpage}. During our fuzzing, we were able to trigger one event, which we reported but was categorized as \textit{intended behavior}.
+In our time-constrained evaluation we were able to let our fuzzer run for a few hours at a time on a laptop, then for 48 hours in the cloud, on an \textit{AWS EC2} instance \cite{awswebpage}. During our fuzzing, we were able to trigger one event, which we reported to \textit{MySQL} but was categorized as \textit{intended behavior}. This is unexpected, as our report shows that one \textit{SERIALISABLE} transaction is able to read updates from another \textit{SERIALISABLE} transaction, which should violate the \textit{SERIALISABLE} isolation level: while the locking behavior of \textit{MySQL} is respected, the \textit{semantics} of the isolation level are not. We believe the \textit{Troc} tool \cite{dou2023detecting_ICSE2023} does also classify this as an isolation bug, as seen in Figure \ref{fig:trocclassification}.
+
+
+\begin{figure}[!h]
+    \centering
+    \fbox{\includegraphics[width=0.7\linewidth]{assets/troc_txn_visibility.png}}
+    \caption{Operation visibility as classified by \textit{Troc}.}
+    \label{fig:trocclassification}
+\end{figure}
+
 
 \section{Limitations and Future Work}
 
