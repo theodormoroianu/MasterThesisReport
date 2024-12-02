@@ -22,7 +22,9 @@ A transaction is a sequence of instructions executed as a single isolated unit o
 
 \section{Isolation Levels}
 
-The isolation between transactions is defined by the isolation level \cite{adya2000generalized}. Stricter isolation levels offer more consistency guarantees, at the cost of concurrency and performance. While many isolation levels have been formalized, the ANSI isolation levels supported by most database systems \cite{melton1992iso_ANSI} are as follows:
+The isolation between transactions is defined by the isolation level. Stricter isolation levels~\cite{si,psi,serializability} offer more consistency guarantees, at the cost of performance~\cite{hat,noc-noc}; 
+weaker isolation levels~\cite{ramp,lora,ua,tcc,DBLP:conf/fase/LiuOSWGM18,pc} cater for diverse real-world applications, such as social media. 
+While many isolation levels have been formalized, the ANSI isolation levels supported by most database systems \cite{melton1992iso_ANSI} are as follows:
 
 \begin{itemize}
     \item \textbf{Read Uncommitted}: The lowest isolation level. Transactions can read uncommitted data from other transactions.
@@ -67,7 +69,9 @@ From a different approach, Clark, J.\ et al. \cite{clark2024validating} proposed
 
 Similarely, Jiang, Z.\ et al. \cite{jiang2023detecting} proposed a novel technique for finding isolation bugs using SQL instrumentation. The technique relies on a similar approach to \textit{Emme}, but the idea of instrumenting SQL queries with additional checks allows the running the instrumented queries in a black-box fashion. The authors are unable to generate a sound Adya dependency graph, but are able to generate single transactions histories equivalent to concurrent ones, allowing for a differential-testing based approach. The authors were able to find $56$ new bugs in \textit{MySQL}, \textit{MariaDB} and \textit{TiDB}.
 
-Other tools employ a large variety of techniques for finding bugs. The \textit{Elle} fuzzer restricts the writes to an append-only list, \cite{kingsbury2020elle}, while \textit{Cobra} relies on key-value stores and on the read-modify-write series of operations \cite{tan2020cobra}. However, such tools miss on the complexity of the SQL language (e.g. nested or ranged queries \cite{jiang2023dynsql}), and are usually unable to handle arbitrary SQL queries, notably those with sub-queries or sub-queries \cite{levy1994query}.
+Other tools~\cite{kingsbury2020elle,tan2020cobra,viper,polysi,plume,isovista,cat} employ a large variety of techniques for finding bugs.
+For instance,
+the \textit{Elle} fuzzer restricts the writes to an append-only list, \cite{kingsbury2020elle}, while \textit{Cobra} relies on key-value stores and on the read-modify-write series of operations \cite{tan2020cobra}. However, such tools miss on the complexity of the SQL language (e.g. nested or ranged queries \cite{jiang2023dynsql}), and are usually unable to handle arbitrary SQL queries, notably those with sub-queries or sub-queries~\cite{levy1994query}.
 
 Our work is inspired by the comprehensive surveying work of Cui, Z.\ et al. \cite{cui2024understanding_ICSE2024} on transactional bugs. The survey cataloged a wide range bugs across multiple DBMSs and reported from various fuzzing tools or simple database users, and captures recurring patterns. However, as the authors acknowledge, their analysis of bugs is "\textit{based on their issue descriptions, embedded test cases, developer discussions, and available fixing patches}", and, to the best of our knowledge, the authors of the survey did not actually replicate the collected bugs, due to constraints on the DBMS versions (often a Git commit) and time consumption.
 
