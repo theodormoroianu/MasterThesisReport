@@ -133,7 +133,7 @@ A few challenging parts are:
 \begin{itemize}
     \item Ensuring the instrumentation code is not interrupted by locking or other operations. This is addressed by re-ordering statements in the test case, and erasing them if no viable scheduling order can be found.
     \item Ensuring that every table of the database stores versioning information for each object, required for understanding the view a statement has access to. This is addressed by adding a \textit{version} column to each table.
-    \item Concurrency issues, such as the non-deterministic locking and unlocking behavior of transactions. This is addressed by spacing out the statements temporally, and ensuring that no transaction locking takes place.
+    \item Concurrency issues, such as the non-deterministic locking and unlocking behavior of transactions. This is addressed by spacing out the statements temporally, and ensuring that no transaction locking or nondeterministic behavior takes place.
 \end{itemize}
 
 
@@ -235,7 +235,7 @@ We implement our technique on top of \textit{TxCheck}, which we modify to suit o
 
 The main changes we make to \textit{TxCheck} are:
 \begin{itemize}
-    \item Update the project to bring it to a working state: \textit{TxCheck} relies on \textit{Docker} images of \textit{Ubuntu 20.04}, on which some dependencies of the project are not available. We fix the broken dependencies, and make the project runnable.
+    \item Update the project to bring it to a working state: \textit{TxCheck} relies on \textit{Docker} images of \textit{Ubuntu 20.04}, on which some dependencies of the project are no longer available. We fix the broken dependencies, and make the project runnable.
     \item Add the new \textit{Before Predicate Match}, \textit{After Predicate Match} and \textit{Predicate Match} instrumentation types.
     \item Modify the dependency extraction code to create a complete and sound extraction of the DSG dependencies.
     \item Modify the bug minimization code to include support for the new instrumentation types.
@@ -254,7 +254,14 @@ Additionally, our tool does not change the fundamental behavior of \textit{TxChe
     \item The soundness of our approach broadens the set of permitted test cases, and does not impose any additional restriction on test cases.
 \end{itemize}
 
-In our time-constrained evaluation we were able to let our fuzzer run for a few hours at a time on a laptop, then for 48 hours in the cloud, on an \textit{AWS EC2} instance \cite{awswebpage}. During our fuzzing, we were able to trigger one event, which we reported to \textit{MySQL} but was categorized as \textit{intended behavior}. This is unexpected, as our report shows that one \textit{SERIALISABLE} transaction is able to read updates from another \textit{SERIALISABLE} transaction, which should violate the \textit{SERIALISABLE} isolation level: while the locking behavior of \textit{MySQL} is respected, the \textit{semantics} of the isolation level are not. We believe the \textit{Troc} tool \cite{dou2023detecting_ICSE2023} does also classify this as an isolation bug, as seen in Figure \ref{fig:trocclassification}.
+In our time-constrained evaluation we were able to let our fuzzer run for a few hours at a time on a laptop, then for 48 hours in the cloud, on an \textit{AWS EC2} instance \cite{awswebpage}.
+
+During our fuzzing, we were able to trigger one event, which we reported to \textit{MySQL} but was categorized as \textit{intended behavior}. This is unexpected, as our report shows that one \textit{SERIALISABLE} transaction is able to read updates from another interleaved \textit{SERIALISABLE} transaction, which should violate the isolation level guarantees. In our opinion, this test case showcases the fundamental design flaw of behavior-based definitions:
+\begin{itemize}
+    \item While the \textit{locking behavior} described in the \textit{MySQL} documentation is indeed respected, the \textit{semantics} of the isolation level are not.
+    \item The \textit{MySQL} documentation specifies that "\textit{SERIALIZABLE enforces even stricter rules than REPEATABLE READ}" \cite{mysqlisolationlevels}. However, this test case works as expected under the \textit{REPEATABLE READ} isolation level. More precisely, \textit{SNAPSHOT ISOLATION}, a weaker consistency level than \textit{SERIALISABLE}, is not respected when running the test case under \textit{SERIALIBABLE}, but is respected when running the same test case under \textit{REPEATABLE READ}.
+    \item The \textit{Troc} tool also classifies this as an isolation bug \cite{dou2023detecting_ICSE2023}, as seen in Figure \ref{fig:trocclassification}, due to its behavior-based testing approach. 
+\end{itemize}
 
 
 \begin{figure}[!h]

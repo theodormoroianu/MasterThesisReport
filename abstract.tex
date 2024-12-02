@@ -1,6 +1,6 @@
 \begin{abstract}
 
-This thesis aims to create a testbed for easily replicating and analyzing Database Management System (DBMS) transactional or isolation bugs, use this testbed to replicate and analyze a set of known bugs, and develop a novel bug-finding tool.
+This thesis aims to create a testbed for easily replicating and analyzing Database Management System (DBMS) transactional or isolation bugs, use this testbed to replicate and analyze a set of known bugs, and develop a novel bug-finding tool. The final objective is an end-to-end testing framework researchers can use for finding, replicating and understanding DBMS isolation bugs.
 
 First, we create a testbed leveraging containerization technology to easily spin-up and run a variety of custom versions of DBMSs. The testbed provides an easy way of running concurrent transaction workloads, and generates logs of the test cases being executed. It also provides an easy way of starting multiple MySQL shells connected to arbitrary versions of the \textit{MySQL}, \textit{MariaDB} and \textit{TiDB} DBMSs.
 
@@ -8,6 +8,7 @@ We then use the testbed to replicate and analyze a set of known bugs in \textit{
 
 Finally, we discuss subsequent steps and focus on the \textit{TxCheck} fuzzer, developed at ETH Zürich. Building upon the theoretical foundation of its design, which frames database misbehavior as graph constructions, we discover an innovative method to improve the technique. \textit{TxCheck} relies on transaction dependency graphs computed through comprehensive but unsound SQL-level instrumentation. We provide the necessary constructs to achieve a sound graph extraction technique. Additionally, we implement this technique within the \textit{TxCheck} fuzzer.
 
+The final product of this project is a framework facilitating DBMS bug fuzzing, replication and analysis. 
 
 % Finally, we explore follow-up steps, and focus on the \textit{TxCheck} fuzzer, developed at ETH Z\" urich. We built on top of the theory behind its design, which expresses database misbehavior as constructions on graphs, and find a novel way to improve the bug-finding technique, which leverages transaction dependencies graphs computed using SQL-level instrumentation. We also implement this technique on top of the \textit{TxCheck} fuzzer.
   
@@ -20,7 +21,7 @@ Finally, we discuss subsequent steps and focus on the \textit{TxCheck} fuzzer, d
 \section*{Acknowledgement}
 I am very grateful for the opportunity of working on my Master's thesis as part of the Information Security group. I would like to extend my deepest gratitude to Prof. Dr. David Basin for the opportunity to work as part of his group, and to Dr. Si Liu for the help, flexibility, guidance and support he offered me throughout the project.  
 
-I am also grateful to my friends Constantin and Alex, my girlfriend Emma and my family for their camaraderie and support throughout the project. Special thanks go to Lucian Bicsi, who proof-read this report.
+I am also grateful to my friends Constantin and Alex, my girlfriend Emma, and my family for their camaraderie and support throughout the project. Special thanks go to Lucian Bicsi, who proof-read this report.
 
 Lastly, I would like to acknowledge the financial support provided by the ETH Foundation, as part of my ESOP scholarship, which made my studies at ETH possible.
 

@@ -13,7 +13,7 @@ The growing discrepancy between storage capacity and processing power, and the c
 Like all software, DBMSs are prone to bugs, especially considering the diminishing returns of optimizing their performance, which is in many cases the bottleneck of the entire system. While unit and integration tests are essential in the development of any software \cite{testimblogtests}, they are not enough to ensure the correctness of such complex systems. This is why, many current testing strategies rely on the use of fuzzing, a technique that generates random inputs to the system under test, in order to find bugs \cite{liang2018fuzzing}.
 
 % Motivation.
-The motivation and goal of this project is to replicate existing DBMS transactional bugs reported to their respective issue trackers, and reported by or analyzed in other works \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, cui2024understanding_ICSE2024}, in order to understand how they correlate with isolation levels. Then, using the gained insights and using a novel fuzzing technique introduced by Jiang, Z.\ et al. \cite{jiang2023detecting} based on SQL instrumentation, we try to find new bugs. We aim to generate the set of Adya dependencies \cite{adya1999weak} of randomly generated concurrent transactions, and to use this information to detect bugs in the concurrency and isolation mechanisms of a distributed database.
+The motivation of this project is to create a bug fuzzing and replication framework. For ensuring our replication framework meets real-world requirements, we set a goal to replicate existing DBMS transactional bugs reported to their respective issue trackers, and reported by or analyzed in other works \cite{jiang2023detecting, cui2022differentially_ASE2022, dou2023detecting_ICSE2023, cui2024understanding_ICSE2024}, in order to understand how they correlate with isolation levels. Then, using the gained insights and using a novel fuzzing technique introduced by Jiang, Z.\ et al. \cite{jiang2023detecting} based on \textit{SQL instrumentation}, we try to find new bugs. Our aim is to improve the \textit{TxCheck} fuzzer \cite{jiang2023detecting} by extracting a sound set of Adya dependencies \cite{adya1999weak} of randomly generated concurrent transactions, and to use this information to detect bugs in the concurrency and isolation mechanisms of a DBMS.
 
 
 
@@ -32,7 +32,8 @@ The motivation and goal of this project is to replicate existing DBMS transactio
 
 
 \section{Contributions}
-Overall, we make the following contributions in this project.
+
+This thesis builds a bug replication, analysis and fuzzing testbed. Overall, we make the following contributions in this project:
 
 \begin{enumerate}
     \item We develop a new bug testing, replication and analysis framework, leveraging containerization techniques, for starting specific versions of DBMS servers, and automatically replicating DBMS bugs.
